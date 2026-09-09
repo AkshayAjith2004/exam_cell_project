@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Examinations | College Exam Seating Arrangement System{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-dark-blue text-decoration-none">Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">Examinations</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold text-dark-blue mb-0"><i class="bi bi-file-earmark-check-fill text-accent me-2"></i>Examinations</h4>
+        <button type="button" class="btn btn-dark-blue text-white" data-bs-toggle="modal" data-bs-target="#addExamModal">
+            <i class="bi bi-plus-circle me-2"></i>Add Exam Session
+        </button>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 py-3">
+        <h5 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-list-stars text-primary me-2"></i>Active / Saved Examination Sessions</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if exams %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                <thead class="table-light text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                    <tr>
+                        <th class="ps-3" style="width: 5%;">#</th>
+                        <th style="width: 15%;">Code</th>
+                        <th>Examination Name</th>
+                        <th style="width: 15%;">Active</th>
+                        <th style="width: 20%;">Actions</th>
+                    </tr>
+                    <!-- Search Filter Row -->
+                    <tr class="bg-light">
+                        <th class="ps-3"></th>
+                        <th>
+                            <input type="text" id="filterCode" class="form-control form-control-sm" placeholder="Search Code..." onkeyup="filterExams()">
+                        </th>
+                        <th>
+                            <input type="text" id="filterName" class="form-control form-control-sm" placeholder="Search Name..." onkeyup="filterExams()">
+                        </th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="examsTableBody">
+                    {% for exam in exams %}
+                    <tr>
+                        <td class="ps-3">{{ forloop.counter }}</td>
+                        <td class="col-code fw-bold text-dark-blue">{{ exam.code }}</td>
+                        <td class="col-name fw-bold text-dark-blue">{{ exam.name }}</td>
+                        <td>
+                            {% if exam.is_active %}
+                                Active
+                            {% else %}
+                                Not Active
+                            {% endif %}
+                        </td>
+                        <td>
+                            <!-- Blue Search button -->
+                            <a href="{% url 'seating_details' %}?exam_id={{ exam.id }}" class="btn btn-sm btn-primary px-2.5 me-1 text-white" title="Search / View details">
+                                <i class="bi bi-search"></i>
+                            </a>
+                            <!-- Orange Edit button -->
+                            <a href="{% url 'exam_edit' exam.id %}" class="btn btn-sm btn-warning px-2.5 me-1 text-white" style="background-color: #f38f18; border-color: #f38f18;" title="Edit Exam">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <!-- Red Cancel/Delete button -->
+                            <a href="{% url 'exam_delete' exam.id %}" class="btn btn-sm btn-danger px-2.5 text-white" onclick="return confirm('Are you sure you want to delete/cancel this exam session?')" title="Delete/Cancel Exam">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center py-4 text-muted">No examination sessions created yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Exam Modal -->
+<div class="modal fade" id="addExamModal" tabindex="-1" aria-labelledby="addExamModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark-blue text-white">
+                <h5 class="modal-title fw-bold" id="addExamModalLabel"><i class="bi bi-file-earmark-plus me-2 text-accent"></i>Add Examination Session</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-medium small text-muted mb-1">Examination Title</label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="e.g. DIPLOMA EXAMINATION APRIL 2026" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="code" class="form-label fw-medium small text-muted mb-1">Session Code</label>
+                        <input type="text" class="form-control" id="code" name="code" placeholder="e.g. 2026-04" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="academic_year" class="form-label fw-medium small text-muted mb-1">Academic Year</label>
+                        <select class="form-select" id="academic_year" name="academic_year" required>
+                            <option value="" disabled selected>Select</option>
+                            {% for ay in academic_years %}
+                            <option value="{{ ay.id }}">{{ ay.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" role="switch" id="is_active" name="is_active" checked>
+                        <label class="form-check-label text-muted small fw-medium" for="is_active">Mark Active Session</label>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-dark-blue text-white">Save Exam</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function filterExams() {
+        var codeVal = document.getElementById('filterCode').value.toLowerCase();
+        var nameVal = document.getElementById('filterName').value.toLowerCase();
+        var rows = document.querySelectorAll('#examsTableBody tr');
+        rows.forEach(function(row) {
+            var codeText = row.querySelector('.col-code').textContent.toLowerCase();
+            var nameText = row.querySelector('.col-name').textContent.toLowerCase();
+            if (codeText.includes(codeVal) && nameText.includes(nameVal)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}

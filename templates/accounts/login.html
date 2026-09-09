@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign In | College Exam Seating Arrangement System{% endblock %}
+
+{% block public_content %}
+<div class="d-flex align-items-center justify-content-center min-vh-100 bg-light-blue-subtle py-5 position-relative">
+    <!-- Back to Home Button -->
+    <a href="{% url 'home' %}" class="btn btn-sm btn-outline-dark-blue position-absolute top-0 start-0 m-4 d-flex align-items-center gap-2 shadow-sm bg-white" style="z-index: 10;">
+        <i class="bi bi-house-door-fill"></i>
+        <span>Back to Home</span>
+    </a>
+    <div class="card border-0 shadow-lg overflow-hidden" style="max-width: 900px; width: 100%; border-radius: 16px;">
+        <div class="row g-0">
+            <!-- Left Banner (Desktop) -->
+            <div class="col-lg-6 bg-dark-blue text-white p-5 d-none d-lg-flex flex-column justify-content-center border-end">
+                <div class="mb-4">
+                    <img src="{% static 'core_app/images/logo.png' %}" alt="Logo" class="img-fluid rounded-circle bg-white p-2" style="width: 80px; height: 80px;">
+                </div>
+                <h3 class="fw-bold mb-2">College of Engineering Poonjar</h3>
+                <p class="text-white-50" style="font-size: 14px;">Official examination portal for student registrations, timetable management, and automated seating allocations.</p>
+                <div class="mt-4 border-top pt-3 border-white-50">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-shield-check text-accent"></i>
+                        <small>Role-based security dashboards</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-printer text-accent"></i>
+                        <small>Instant printable reports & desk slips</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Login Form -->
+            <div class="col-lg-6 bg-white p-4 p-md-5 d-flex flex-column justify-content-center">
+                <div class="mobile-branding text-center d-lg-none mb-4">
+                    <img src="{% static 'core_app/images/logo.png' %}" alt="Logo" class="img-fluid rounded-circle bg-white shadow-sm p-1" style="width: 60px; height: 60px;">
+                    <h5 class="fw-bold mt-2 text-dark-blue mb-0">College of Engineering Poonjar</h5>
+                    <small class="text-muted" style="font-size: 11px;">Examination Seating Portal</small>
+                </div>
+
+                <h3 class="fw-bold text-dark-blue mb-2">Portal Sign In</h3>
+                <p class="text-muted small mb-4">Enter your credentials to access the examination dashboard.</p>
+
+                <!-- Django Messages inside Login form -->
+                {% if messages %}
+                <div class="messages-container mb-3">
+                    {% for message in messages %}
+                    <div class="alert alert-danger border-0 shadow-sm py-2" role="alert" style="font-size: 13px;">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{% url 'login' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="username" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Username / Admission No</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-person"></i></span>
+                            <input type="text" class="form-control border-start-0" id="username" name="username" placeholder="Enter username" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock"></i></span>
+                            <input type="password" class="form-control border-start-0" id="password" name="password" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-dark-blue w-100 py-2 fw-semibold">
+                        Sign In <i class="bi bi-arrow-right-short ms-1"></i>
+                    </button>
+                </form>
+
+                <div class="mt-4 pt-3 border-top text-center text-muted">
+                    <p class="small mb-0">Don't have an account? <a href="{% url 'signup' %}" class="fw-semibold text-dark-blue">Sign Up</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,571 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | College Exam Seating Arrangement System{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+{% endblock %}
+
+{% block content %}
+<!-- Welcome Banner -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="welcome-banner p-4 shadow-sm border-0 d-flex flex-wrap justify-content-between align-items-center bg-dark-blue text-white rounded position-relative overflow-hidden gap-3">
+            <div class="welcome-watermark position-absolute" style="right: 20px; font-size: 80px; opacity: 0.1; pointer-events: none;"><i class="bi bi-mortarboard"></i></div>
+            <div class="d-flex align-items-center">
+                <div class="welcome-icon d-none d-md-flex align-items-center justify-content-center me-4 rounded-circle bg-white bg-opacity-15" style="width: 60px; height: 60px; font-size: 28px;">
+                    <i class="bi bi-mortarboard-fill text-accent"></i>
+                </div>
+                <div>
+                    <h4 class="fw-bold mb-1">College of Engineering Poonjar Portal</h4>
+                    <p class="mb-0 text-white-50" style="font-size: 14px;">You are currently logged in as a <strong>{{ role|title }}</strong>. Use the sidebar panel to manage examination seating records.</p>
+                </div>
+            </div>
+            {% if role in 'ADMIN EXAM_CONTROLLER' %}
+            <div class="z-1">
+                {% if active_academic_years %}
+                <span class="badge bg-white bg-opacity-15 text-white px-3 py-2 border border-white-50 rounded-pill d-inline-flex align-items-center gap-2" style="backdrop-filter: blur(4px);">
+                    <span class="spinner-grow spinner-grow-sm text-success" role="status" style="width: 8px; height: 8px;"></span>
+                    <span>Active Session{% if active_academic_years.count > 1 %}s{% endif %}: 
+                        <strong class="text-accent">
+                            {% for a in active_academic_years %}{{ a.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                        </strong>
+                    </span>
+                </span>
+                {% else %}
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <span>No Active Academic Session</span>
+                </span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if role == 'STUDENT' %}
+<!-- STUDENT DASHBOARD -->
+<div class="row g-4">
+    <!-- Seat Ticket -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-chair text-primary me-2"></i>My Seating Allotments</h5>
+                <span class="badge bg-dark-blue">{{ allocations.count }} Allotted</span>
+            </div>
+            <div class="card-body">
+                {% if allocations %}
+                    {% for alloc in allocations %}
+                    <div class="seat-ticket-card p-4 mb-3 border position-relative border-start border-4 border-dark-blue bg-light-blue-subtle" style="border-radius: 8px;">
+                        <div class="ticket-watermark position-absolute" style="right: 15px; bottom: 0px; font-size: 90px; color: var(--gray-200); opacity: 0.15; pointer-events: none;"><i class="bi bi-chair"></i></div>
+                        <div class="ticket-header border-bottom pb-2 mb-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-dark-blue mb-1" style="font-size: 9px;">{{ alloc.timetable.subject.subject_code }}</span>
+                                <h6 class="fw-bold mb-0 text-dark-blue">{{ alloc.timetable.subject.subject_name }}</h6>
+                            </div>
+                            <span class="seat-badge bg-accent text-dark-blue fw-bold px-3 py-2 rounded fs-5" style="border: 2px solid var(--dark-blue);">{{ alloc.seat_number }}</span>
+                        </div>
+                        <div class="ticket-body" style="font-size: 13px;">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">EXAMINATION HALL</small>
+                                    <span class="fw-semibold text-dark-blue">{{ alloc.classroom.room_number }} ({{ alloc.classroom.building }})</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">DATE & SESSION</small>
+                                    <span class="fw-semibold">{{ alloc.timetable.exam_date|date:"d-M-Y" }} ({{ alloc.timetable.session }})</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">TIME SLOT</small>
+                                    <span class="fw-semibold text-primary"><i class="bi bi-clock me-1"></i>{{ alloc.timetable.start_time|time:"H:i" }} - {{ alloc.timetable.end_time|time:"H:i" }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">SEAT POSITION</small>
+                                    <span class="fw-semibold">Row {{ alloc.row_index }}, Column {{ alloc.col_index }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-chair fa-3x mb-3 text-secondary"></i>
+                        <p class="mb-0">No seating arrangement generated for your exams yet.</p>
+                        <small>Check back closer to the examination date.</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Exam Timetable -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <h5 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-calendar-range text-primary me-2"></i>My Exam Schedule</h5>
+                <div class="d-flex gap-2">
+                    {% if timetable_attachment %}
+                    <a href="{{ timetable_attachment.url }}" target="_blank" class="btn btn-sm btn-success fw-bold text-white shadow-sm">
+                        <i class="bi bi-file-earmark-arrow-down-fill me-1"></i>Download Timetable (PDF)
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'print_report' report_type='timetable' %}?sem={{ student.semester }}&branch={{ student.branch.id }}" target="_blank" class="btn btn-sm btn-outline-dark-blue">
+                        <i class="bi bi-printer me-1"></i>Print
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if timetable %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Code</th>
+                                    <th>Subject</th>
+                                    <th>Date &amp; Session</th>
+                                    <th class="text-end pe-3">Document</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for slot in timetable %}
+                                <tr>
+                                    <td class="ps-3"><span class="badge bg-secondary-subtle text-secondary-emphasis">{{ slot.subject.subject_code }}</span></td>
+                                    <td>
+                                        <div class="fw-semibold">{{ slot.subject.subject_name }}</div>
+                                    </td>
+                                    <td>{{ slot.exam_date|date:"d-M-Y" }} <span class="badge {% if slot.session == 'Morning' %}bg-warning-subtle text-warning-emphasis{% else %}bg-primary-subtle text-primary-emphasis{% endif %}">{{ slot.session }}</span></td>
+                                    <td class="text-end pe-3">
+                                        {% if slot.attachment %}
+                                        <a href="{{ slot.attachment.url }}" target="_blank" class="btn btn-xs btn-sm btn-outline-success">
+                                            <i class="bi bi-download me-1"></i>PDF
+                                        </a>
+                                        {% elif timetable_attachment %}
+                                        <a href="{{ timetable_attachment.url }}" target="_blank" class="btn btn-xs btn-sm btn-outline-success">
+                                            <i class="bi bi-download me-1"></i>PDF
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted small">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-calendar-x fa-3x mb-3 text-secondary"></i>
+                        <p class="mb-0">No exam timetable found for your branch ({{ student.branch.code }} - Semester {{ student.semester }}).</p>
+                        {% if timetable_attachment %}
+                        <a href="{{ timetable_attachment.url }}" target="_blank" class="btn btn-sm btn-success mt-3 fw-bold text-white">
+                            <i class="bi bi-file-earmark-arrow-down-fill me-1"></i>Download Official Timetable Document
+                        </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% elif role == 'TEACHER' %}
+<!-- TEACHER DASHBOARD -->
+<div class="row g-4 mb-4">
+    <!-- Stat Cards -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm bg-gradient-blue text-white h-100">
+            <div class="card-body d-flex justify-content-between align-items-center p-4">
+                <div>
+                    <h6 class="text-white-50 text-uppercase fw-semibold mb-1" style="font-size: 11px;">My Assigned Subjects</h6>
+                    <h2 class="fw-bold mb-0">{{ subjects.count }}</h2>
+                </div>
+                <div class="stat-icon text-white bg-white bg-opacity-15 rounded-circle d-flex align-items-center justify-content-center" style="width: 55px; height: 55px; font-size: 24px;"><i class="bi bi-book"></i></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm bg-gradient-purple text-white h-100">
+            <div class="card-body d-flex justify-content-between align-items-center p-4">
+                <div>
+                    <h6 class="text-white-50 text-uppercase fw-semibold mb-1" style="font-size: 11px;">Upcoming Duties (Exams)</h6>
+                    <h2 class="fw-bold mb-0">{{ upcoming_exams.count }}</h2>
+                </div>
+                <div class="stat-icon text-white bg-white bg-opacity-15 rounded-circle d-flex align-items-center justify-content-center" style="width: 55px; height: 55px; font-size: 24px;"><i class="bi bi-calendar-check"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Upcoming Exams -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-calendar3 text-primary me-2"></i>My Scheduled Exam Slots</h5>
+                <a href="{% url 'timetable_list' %}" class="btn btn-outline-dark-blue btn-sm">Full Timetable</a>
+            </div>
+            <div class="card-body p-0">
+                {% if upcoming_exams %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Subject</th>
+                                    <th>Dept & Sem</th>
+                                    <th>Date</th>
+                                    <th>Session</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for slot in upcoming_exams %}
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="fw-semibold">{{ slot.subject.subject_name }}</div>
+                                        <small class="text-muted">{{ slot.subject.subject_code }}</small>
+                                    </td>
+                                    <td>{{ slot.subject.department.code }} - Sem {{ slot.subject.semester }}</td>
+                                    <td>{{ slot.exam_date|date:"d-M-Y" }}</td>
+                                    <td><span class="badge {% if slot.session == 'Morning' %}bg-warning-subtle text-warning-emphasis{% else %}bg-primary-subtle text-primary-emphasis{% endif %}">{{ slot.session }}</span></td>
+                                    <td>{{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-calendar-minus fa-3x mb-3 text-secondary"></i>
+                        <p class="mb-0">No upcoming exam slots found for your assigned courses.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Notice Board -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-megaphone text-primary me-2"></i>Announcements</h5>
+                <a href="{% url 'notification_list' %}" class="btn btn-outline-dark-blue btn-sm">All</a>
+            </div>
+            <div class="card-body">
+                {% if notifications %}
+                    {% for notice in notifications %}
+                    <div class="notice-item border-bottom pb-2 mb-2">
+                        <h6 class="fw-bold mb-1 text-dark-blue" style="font-size: 13px;">{{ notice.title }}</h6>
+                        <p class="small text-muted mb-1" style="font-size: 11px;">{{ notice.message|truncatewords:12 }}</p>
+                        <small class="text-muted" style="font-size: 10px;">{{ notice.created_at|date:"d-M-Y" }}</small>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-center py-4 text-muted small">No announcements posted.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% elif role in 'ADMIN EXAM_CONTROLLER' %}
+<!-- ADMIN & EXAM CONTROLLER DASHBOARD -->
+<div class="row g-3 mb-4">
+    <!-- Stat Cards -->
+    <div class="col-md-6 col-lg-4 col-xl-2">
+        <div class="card border-0 shadow-sm bg-gradient-blue text-white h-100">
+            <div class="card-body d-flex justify-content-between align-items-center p-3">
+                <div>
+                    <h6 class="text-white-50 text-uppercase fw-semibold mb-1" style="font-size: 9px;">Total Students</h6>
+                    <h3 class="fw-bold mb-0">{{ total_students }}</h3>
+                </div>
+                <div class="stat-icon" style="font-size: 26px; opacity: 0.3;"><i class="bi bi-people"></i></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 col-xl-2">
+        <div class="card border-0 shadow-sm bg-gradient-purple text-white h-100">
+            <div class="card-body d-flex justify-content-between align-items-center p-3">
+                <div>
+                    <h6 class="text-white-50 text-uppercase fw-semibold mb-1" style="font-size: 9px;">Total Teachers</h6>
+                    <h3 class="fw-bold mb-0">{{ total_teachers }}</h3>
+                </div>
+                <div class="stat-icon" style="font-size: 26px; opacity: 0.3;"><i class="bi bi-person-badge"></i></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 col-xl-2">
+        <div class="card border-0 shadow-sm bg-gradient-teal text-white h-100">
+            <div class="card-body d-flex justify-content-between align-items-center p-3">
+                <div>
+                    <h6 class="text-white-50 text-uppercase fw-semibold mb-1" style="font-size: 9px;">Departments</h6>
+                    <h3 class="fw-bold mb-0">{{ total_departments }}</h3>
+                </div>
+                <div class="stat-icon" style="font-size: 26px; opacity: 0.3;"><i class="bi bi-diagram-3"></i></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 col-xl-2">
+        <div class="card border-0 shadow-sm bg-gradient-orange text-white h-100">
+            <div class="card-body d-flex justify-content-between align-items-center p-3">
+                <div>
+                    <h6 class="text-white-50 text-uppercase fw-semibold mb-1" style="font-size: 9px;">Total Subjects</h6>
+                    <h3 class="fw-bold mb-0">{{ total_subjects }}</h3>
+                </div>
+                <div class="stat-icon" style="font-size: 26px; opacity: 0.3;"><i class="bi bi-book"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 col-xl-2">
+        <div class="card border-0 shadow-sm bg-gradient-blue text-white h-100">
+            <div class="card-body d-flex justify-content-between align-items-center p-3">
+                <div>
+                    <h6 class="text-white-50 text-uppercase fw-semibold mb-1" style="font-size: 9px;">Exam Halls</h6>
+                    <h3 class="fw-bold mb-0">{{ total_classrooms }}</h3>
+                </div>
+                <div class="stat-icon" style="font-size: 26px; opacity: 0.3;"><i class="bi bi-door-open"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 col-xl-2">
+        <div class="card border-0 shadow-sm bg-gradient-purple text-white h-100">
+            <div class="card-body d-flex justify-content-between align-items-center p-3">
+                <div>
+                    <h6 class="text-white-50 text-uppercase fw-semibold mb-1" style="font-size: 9px;">Active Exams</h6>
+                    <h3 class="fw-bold mb-0">{{ total_exams }}</h3>
+                </div>
+                <div class="stat-icon" style="font-size: 26px; opacity: 0.3;"><i class="bi bi-file-earmark-check"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Quick Actions -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-lightning text-primary me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body d-flex flex-column gap-2.5">
+                <a href="{% url 'generate_seating' %}" class="btn btn-dark-blue py-2 d-flex align-items-center justify-content-center gap-2 text-white shadow-sm">
+                    <i class="bi bi-cpu"></i> Generate Seating Arrangement
+                </a>
+                <a href="{% url 'classroom_list' %}" class="btn btn-outline-dark-blue py-2 d-flex align-items-center justify-content-center gap-2">
+                    <i class="bi bi-door-open"></i> Manage Classrooms
+                </a>
+                <a href="{% url 'student_list' %}" class="btn btn-outline-dark-blue py-2 d-flex align-items-center justify-content-center gap-2">
+                    <i class="bi bi-person-plus"></i> Add New Student
+                </a>
+                <a href="{% url 'timetable_list' %}" class="btn btn-outline-dark-blue py-2 d-flex align-items-center justify-content-center gap-2">
+                    <i class="bi bi-calendar-plus"></i> Schedule Exam Slot
+                </a>
+                <button type="button" class="btn btn-outline-success py-2 d-flex align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#dashboardAddAYModal">
+                    <i class="bi bi-calendar-plus"></i> Add Academic Session
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Academic Calendar Years Management -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h5 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-calendar-check text-primary me-2"></i>Academic Calendar Years</h5>
+                    {% if active_academic_years %}
+                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-2 py-1">
+                        <i class="bi bi-check-circle-fill text-success me-1"></i>{{ active_academic_years.count }} Active Session{% if active_academic_years.count > 1 %}s{% endif %}
+                    </span>
+                    {% else %}
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">
+                        <i class="bi bi-exclamation-triangle text-warning me-1"></i>No Active Year
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-dark-blue text-white shadow-sm" data-bs-toggle="modal" data-bs-target="#dashboardAddAYModal">
+                        <i class="bi bi-plus-circle me-1"></i>New Session
+                    </button>
+                    <a href="{% url 'department_list' %}" class="btn btn-sm btn-outline-dark-blue">
+                        <i class="bi bi-diagram-3 me-1"></i>All Settings
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if academic_years %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                        <thead class="table-light text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                            <tr>
+                                <th class="ps-3">Academic Session</th>
+                                <th>Status</th>
+                                <th class="text-end pe-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ay in academic_years %}
+                            <tr class="{% if ay.is_active %}table-success bg-opacity-10{% endif %}">
+                                <td class="ps-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center {% if ay.is_active %}bg-success text-white shadow-sm{% else %}bg-secondary-subtle text-muted{% endif %}" style="width: 32px; height: 32px; font-size: 14px;">
+                                            <i class="bi bi-calendar3"></i>
+                                        </div>
+                                        <div>
+                                            <span class="fw-bold text-dark-blue">{{ ay.name }}</span>
+                                            {% if ay.is_active %}
+                                            <span class="badge bg-success ms-1" style="font-size: 9px;">ACTIVE SESSION</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if ay.is_active %}
+                                        <span class="badge bg-success text-white px-2.5 py-1.5 shadow-sm d-inline-flex align-items-center gap-1">
+                                            <i class="bi bi-check-circle-fill"></i> Active
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary-emphasis px-2.5 py-1.5 d-inline-flex align-items-center gap-1">
+                                            <i class="bi bi-dash-circle"></i> Inactive
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-3">
+                                    {% if ay.is_active %}
+                                    <!-- Deactivate Option -->
+                                    <form method="POST" action="{% url 'academic_year_toggle' pk=ay.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="status_action" value="deactivate">
+                                        <input type="hidden" name="next" value="{% url 'dashboard' %}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger shadow-sm d-inline-flex align-items-center gap-1 px-3 py-1 fw-medium" title="Deactivate this academic session">
+                                            <i class="bi bi-pause-circle"></i> Deactivate
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <!-- Activate Option -->
+                                    <form method="POST" action="{% url 'academic_year_toggle' pk=ay.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="status_action" value="activate">
+                                        <input type="hidden" name="next" value="{% url 'dashboard' %}">
+                                        <button type="submit" class="btn btn-sm btn-success text-white shadow-sm d-inline-flex align-items-center gap-1 px-3 py-1 fw-medium" title="Activate this academic session">
+                                            <i class="bi bi-play-circle-fill"></i> Activate
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-calendar-x fa-3x mb-2 text-secondary"></i>
+                    <p class="mb-2">No academic calendar years configured yet.</p>
+                    <button type="button" class="btn btn-sm btn-dark-blue text-white" data-bs-toggle="modal" data-bs-target="#dashboardAddAYModal">
+                        <i class="bi bi-plus-circle me-1"></i>Add Academic Year
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Generated Allocations Summary -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-chair text-primary me-2"></i>Seating Generations Summary</h5>
+                <a href="{% url 'generate_seating' %}" class="btn btn-sm btn-outline-dark-blue">
+                    <i class="bi bi-plus-circle me-1"></i>New Generation
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_seating %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Exam Session</th>
+                                    <th>Exam Date & Session</th>
+                                    <th>Rooms Allocated</th>
+                                    <th>Seated Students</th>
+                                    <th class="text-end pe-3">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in recent_seating %}
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="fw-semibold text-dark-blue">{{ item.exam__name }}</div>
+                                        <small class="text-muted">Code: {{ item.exam__code }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">{{ item.timetable__exam_date|date:"d-M-Y" }}</div>
+                                        <span class="badge {% if item.timetable__session == 'Morning' %}bg-warning-subtle text-warning-emphasis{% else %}bg-primary-subtle text-primary-emphasis{% endif %}">{{ item.timetable__session }}</span>
+                                    </td>
+                                    <td><span class="badge bg-secondary-subtle text-secondary-emphasis">{{ item.room_count }} Halls</span></td>
+                                    <td><span class="badge bg-success-subtle text-success-emphasis">{{ item.student_count }} Students</span></td>
+                                    <td class="text-end pe-3">
+                                        <a href="{% url 'seating_details' %}?exam_id={{ item.exam__id }}&date={{ item.timetable__exam_date|date:'Y-m-d' }}&session={{ item.timetable__session }}" class="btn btn-sm btn-dark-blue text-white">
+                                            <i class="bi bi-eye"></i> View Grid
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-couch fa-3x mb-3 text-secondary"></i>
+                        <p class="mb-0">No seating arrangement generated yet.</p>
+                        <a href="{% url 'generate_seating' %}" class="btn btn-sm btn-dark-blue text-white mt-2">Generate Now</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard Add Academic Year Modal -->
+<div class="modal fade" id="dashboardAddAYModal" tabindex="-1" aria-labelledby="dashboardAddAYModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark-blue text-white">
+                <h5 class="modal-title fw-bold" id="dashboardAddAYModalLabel"><i class="bi bi-calendar-plus me-2 text-accent"></i>Add Academic Calendar Year</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'academic_year_add' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'dashboard' %}">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="dash_ay_name" class="form-label fw-medium small text-muted mb-1">Academic Year Label</label>
+                        <input type="text" class="form-control" id="dash_ay_name" name="name" placeholder="e.g. 2026-2027" required>
+                        <div class="form-text" style="font-size: 11px;">Format: YYYY-YYYY (e.g., 2025-2026)</div>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" role="switch" id="dash_is_active" name="is_active" checked>
+                        <label class="form-check-label text-muted small fw-medium" for="dash_is_active">Set as Active Session Immediately</label>
+                    </div>
+                    <small class="text-muted d-block" style="font-size: 11px;">Note: Activating this session will automatically set any previously active year as inactive.</small>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-dark-blue text-white"><i class="bi bi-check2-circle me-1"></i>Save Session</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

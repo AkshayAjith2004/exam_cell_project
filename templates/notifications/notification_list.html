@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Notice Board | College Exam Seating Arrangement System{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-dark-blue text-decoration-none">Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">Notices</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold text-dark-blue mb-0"><i class="bi bi-megaphone-fill text-accent me-2"></i>Official Notice Board</h4>
+        {% if user.profile.role in 'ADMIN EXAM_CONTROLLER TEACHER' %}
+        <button type="button" class="btn btn-dark-blue text-white" data-bs-toggle="modal" data-bs-target="#addNoticeModal">
+            <i class="bi bi-plus-circle me-2"></i>Publish Notice
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Notices List -->
+    <div class="col-lg-8">
+        {% if notifications %}
+            {% for notice in notifications %}
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="fw-bold text-dark-blue mb-0">{{ notice.title }}</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <small class="text-muted"><i class="bi bi-calendar3 me-1"></i>{{ notice.created_at|date:"d-M-Y H:i" }}</small>
+                            {% if user.profile.role in 'ADMIN EXAM_CONTROLLER' or user == notice.author %}
+                            <form method="POST" action="{% url 'notification_delete' notice.id %}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete the notice &quot;{{ notice.title|escapejs }}&quot;?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2 border-0" title="Delete Published Notice">
+                                    <i class="bi bi-trash3-fill"></i> Delete
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <p class="text-muted mb-3" style="font-size: 14px; line-height: 1.6; white-space: pre-line;">{{ notice.message }}</p>
+                    <div class="d-flex justify-content-between align-items-center border-top pt-2" style="font-size: 11.5px;">
+                        <span class="text-muted">Author: <strong class="text-primary">{{ notice.author.get_full_name|default:notice.author.username }}</strong></span>
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis text-uppercase">{{ notice.author.profile.get_role_display }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card border-0 shadow-sm text-center py-5">
+                <div class="card-body">
+                    <i class="bi bi-megaphone fa-3x mb-3 text-secondary"></i>
+                    <p class="mb-0 text-muted">No notices or examination alerts published yet.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick guidelines sidebar -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm bg-gradient-blue text-white p-4">
+            <h5 class="fw-bold text-accent mb-3"><i class="bi bi-info-circle me-2"></i>Candidate Instructions</h5>
+            <ol class="small text-white-50 ps-3 mb-0" style="line-height: 1.6;">
+                <li class="mb-2">Candidates must be in the examination hall 15 minutes before the commencement of the exam.</li>
+                <li class="mb-2">Ensure you verify your allotted Hall Number and Seat Card on your dashboard before entering the floor.</li>
+                <li class="mb-2">Possession of mobile phones, smartwatches, or any electronic materials is strictly prohibited inside the hall.</li>
+                <li>Ensure you bring your Hall Ticket / College ID card for verification.</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<!-- Add Notice Modal -->
+{% if user.profile.role in 'ADMIN EXAM_CONTROLLER TEACHER' %}
+<div class="modal fade" id="addNoticeModal" tabindex="-1" aria-labelledby="addNoticeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark-blue text-white">
+                <h5 class="modal-title fw-bold" id="addNoticeModalLabel"><i class="bi bi-megaphone me-2 text-accent"></i>Publish Notice Alert</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'notification_add' %}">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="notice_title" class="form-label fw-medium small text-muted mb-1">Notice Title</label>
+                        <input type="text" class="form-control" id="notice_title" name="title" placeholder="e.g. Supplementary Exams Postponed" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notice_message" class="form-label fw-medium small text-muted mb-1">Notice Message / Details</label>
+                        <textarea class="form-control" id="notice_message" name="message" rows="5" placeholder="Enter notice announcement details here..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-dark-blue text-white">Publish Notice</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

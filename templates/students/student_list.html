@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+
+{% block title %}Examination Students | College Exam Seating Arrangement System{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-dark-blue text-decoration-none">Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">Students</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold text-dark-blue mb-0"><i class="bi bi-people-fill text-accent me-2"></i>Examination Students Registry</h4>
+        {% if user.profile.role in 'ADMIN EXAM_CONTROLLER' %}
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#uploadExcelModal">
+                <i class="bi bi-file-earmark-excel me-2"></i>Upload Excel / CSV
+            </button>
+            <button type="button" class="btn btn-dark-blue text-white" data-bs-toggle="modal" data-bs-target="#registerStudentModal">
+                <i class="bi bi-person-plus-fill me-2"></i>Register Student
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 py-3">
+        <div class="row g-3 align-items-center">
+            <!-- Search Form -->
+            <div class="col-xl-4 col-lg-5">
+                <form method="GET" action="{% url 'student_list' %}" class="d-flex align-items-center gap-2">
+                    {% if selected_branch %}<input type="hidden" name="branch" value="{{ selected_branch }}">{% endif %}
+                    {% if selected_sem %}<input type="hidden" name="sem" value="{{ selected_sem }}">{% endif %}
+                    {% if selected_batch %}<input type="hidden" name="batch" value="{{ selected_batch }}">{% endif %}
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0 bg-light" name="q" value="{{ query }}" placeholder="Search by name, S3, S4, S5, roll no...">
+                    </div>
+                    <button type="submit" class="btn btn-dark-blue text-white">Search</button>
+                    {% if query %}
+                    <a href="?{% if selected_branch %}branch={{ selected_branch }}&{% endif %}{% if selected_sem %}sem={{ selected_sem }}&{% endif %}{% if selected_batch %}batch={{ selected_batch }}{% endif %}" class="btn btn-outline-secondary">Clear</a>
+                    {% endif %}
+                </form>
+            </div>
+
+            <!-- Filters Toolbar -->
+            <div class="col-xl-8 col-lg-7 d-flex flex-wrap align-items-center justify-content-lg-end gap-2">
+                <!-- Semester Quick Filter Buttons: All, S3, S4, S5 -->
+                <div class="btn-group btn-group-sm" role="group" aria-label="Semester Quick Filter">
+                    <a href="?{% if selected_branch %}branch={{ selected_branch }}&{% endif %}{% if selected_batch %}batch={{ selected_batch }}&{% endif %}{% if query %}q={{ query }}&{% endif %}" class="btn {% if not selected_sem %}btn-dark-blue active{% else %}btn-outline-secondary{% endif %}">
+                        All Sems
+                    </a>
+                    <a href="?sem=3{% if selected_branch %}&branch={{ selected_branch }}{% endif %}{% if selected_batch %}&batch={{ selected_batch }}{% endif %}{% if query %}&q={{ query }}{% endif %}" class="btn {% if selected_sem == '3' %}btn-primary active fw-bold{% else %}btn-outline-primary{% endif %}">
+                        <i class="bi bi-funnel-fill me-1"></i>S3
+                    </a>
+                    <a href="?sem=4{% if selected_branch %}&branch={{ selected_branch }}{% endif %}{% if selected_batch %}&batch={{ selected_batch }}{% endif %}{% if query %}&q={{ query }}{% endif %}" class="btn {% if selected_sem == '4' %}btn-success active fw-bold{% else %}btn-outline-success{% endif %}">
+                        <i class="bi bi-funnel-fill me-1"></i>S4
+                    </a>
+                    <a href="?sem=5{% if selected_branch %}&branch={{ selected_branch }}{% endif %}{% if selected_batch %}&batch={{ selected_batch }}{% endif %}{% if query %}&q={{ query }}{% endif %}" class="btn {% if selected_sem == '5' %}btn-warning text-dark active fw-bold{% else %}btn-outline-warning{% endif %}">
+                        <i class="bi bi-funnel-fill me-1"></i>S5
+                    </a>
+                </div>
+
+                <!-- Semester Select Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle {% if selected_sem and selected_sem != '3' and selected_sem != '4' and selected_sem != '5' %}active btn-dark-blue text-white{% endif %}" type="button" data-bs-toggle="dropdown">
+                        {% if selected_sem %}Semester {{ selected_sem }}{% else %}All Semesters{% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                        <li><a class="dropdown-item {% if not selected_sem %}active{% endif %}" href="?{% if selected_branch %}branch={{ selected_branch }}&{% endif %}{% if selected_batch %}batch={{ selected_batch }}&{% endif %}{% if query %}q={{ query }}{% endif %}">All Semesters</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% for sem in semester_choices %}
+                        <li><a class="dropdown-item {% if selected_sem == sem|stringformat:'i' %}active{% endif %}" href="?sem={{ sem }}{% if selected_branch %}&branch={{ selected_branch }}{% endif %}{% if selected_batch %}&batch={{ selected_batch }}{% endif %}{% if query %}&q={{ query }}{% endif %}">Semester {{ sem }} (S{{ sem }})</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Branch Filter -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle {% if selected_branch %}active btn-dark-blue text-white{% endif %}" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-diagram-3 me-1"></i>
+                        {% if selected_branch %}
+                            {% for b in branches %}{% if b.id|stringformat:'i' == selected_branch %}{{ b.code }}{% endif %}{% endfor %}
+                        {% else %}
+                            All Branches
+                        {% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                        <li><a class="dropdown-item {% if not selected_branch %}active{% endif %}" href="?{% if selected_sem %}sem={{ selected_sem }}&{% endif %}{% if selected_batch %}batch={{ selected_batch }}&{% endif %}{% if query %}q={{ query }}{% endif %}">All Branches</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% for branch in branches %}
+                        <li><a class="dropdown-item {% if selected_branch == branch.id|stringformat:'i' %}active{% endif %}" href="?branch={{ branch.id }}{% if selected_sem %}&sem={{ selected_sem }}{% endif %}{% if selected_batch %}&batch={{ selected_batch }}{% endif %}{% if query %}&q={{ query }}{% endif %}">{{ branch.code }} - {{ branch.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Batch Filter -->
+                <div class="btn-group btn-group-sm" role="group" aria-label="Batch Filter">
+                    <a href="?{% if selected_branch %}branch={{ selected_branch }}&{% endif %}{% if selected_sem %}sem={{ selected_sem }}&{% endif %}{% if query %}q={{ query }}&{% endif %}" class="btn {% if not selected_batch %}btn-dark-blue active{% else %}btn-outline-secondary{% endif %}">
+                        All Batches
+                    </a>
+                    <a href="?batch=A{% if selected_branch %}&branch={{ selected_branch }}{% endif %}{% if selected_sem %}&sem={{ selected_sem }}{% endif %}{% if query %}&q={{ query }}{% endif %}" class="btn {% if selected_batch == 'A' %}btn-info text-white active fw-bold{% else %}btn-outline-info{% endif %}">
+                        Batch A (Roll 1-40)
+                    </a>
+                    <a href="?batch=B{% if selected_branch %}&branch={{ selected_branch }}{% endif %}{% if selected_sem %}&sem={{ selected_sem }}{% endif %}{% if query %}&q={{ query }}{% endif %}" class="btn {% if selected_batch == 'B' %}btn-warning text-dark active fw-bold{% else %}btn-outline-warning{% endif %}">
+                        Batch B (Roll 1+)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                <thead class="table-light text-uppercase fw-bold" style="font-size: 12px; letter-spacing: 0.5px;">
+                    <tr>
+                        <th class="ps-3" style="width: 100px;">Roll No</th>
+                        <th style="width: 220px;">Register Number</th>
+                        <th>Name</th>
+                        <th style="width: 160px;">Branch &amp; Sem</th>
+                        {% if user.profile.role in 'ADMIN EXAM_CONTROLLER' %}
+                        <th class="text-end pe-3" style="width: 120px;">Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in page_obj %}
+                    <tr>
+                        <td class="ps-3 fw-bold text-muted">{{ student.batch_roll_no|default:forloop.counter }}</td>
+                        <td>
+                            <span class="fw-bold text-dark-blue font-monospace" style="letter-spacing: 0.5px;">{{ student.registration_number|default:student.admission_number }}</span>
+                        </td>
+                        <td class="fw-bold text-uppercase text-dark-blue">
+                            {{ student.user.get_full_name }}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis me-1">{{ student.branch.code }}</span>
+                            <span class="badge {% if student.semester == 3 %}bg-primary{% elif student.semester == 4 %}bg-success{% elif student.semester == 5 %}bg-warning text-dark{% else %}bg-primary-subtle text-primary-emphasis{% endif %} me-1">Sem {{ student.semester }}</span>
+                            {% if student.batch %}
+                            <span class="badge bg-info-subtle text-info-emphasis">Batch {{ student.batch }}</span>
+                            {% endif %}
+                        </td>
+                        {% if user.profile.role in 'ADMIN EXAM_CONTROLLER' %}
+                        <td class="text-end pe-3">
+                            <a href="{% url 'student_edit' student.pk %}" class="btn btn-sm btn-outline-primary border-0 me-1" data-bs-toggle="tooltip" title="Edit">
+                                <i class="bi bi-pencil-square fs-6"></i>
+                            </a>
+                            <a href="{% url 'student_delete' student.pk %}" class="btn btn-sm btn-outline-danger border-0" onclick="return confirm('Are you sure you want to delete this student record? This cannot be undone.')" data-bs-toggle="tooltip" title="Delete">
+                                <i class="bi bi-trash fs-6"></i>
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-people fa-3x mb-3 text-secondary"></i>
+                            <p class="mb-0">No examination students found matching your criteria.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="card-footer bg-white border-0 py-3">
+        <nav aria-label="Student registry pagination">
+            <ul class="pagination pagination-sm justify-content-end mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?q={{ query }}&branch={{ selected_branch }}&sem={{ selected_sem }}&batch={{ selected_batch }}&page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?q={{ query }}&branch={{ selected_branch }}&sem={{ selected_sem }}&batch={{ selected_batch }}&page={{ num }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?q={{ query }}&branch={{ selected_branch }}&sem={{ selected_sem }}&batch={{ selected_batch }}&page={{ page_obj.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Register Student Modal -->
+{% if user.profile.role in 'ADMIN EXAM_CONTROLLER' %}
+<div class="modal fade" id="registerStudentModal" tabindex="-1" aria-labelledby="registerStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark-blue text-white">
+                <h5 class="modal-title fw-bold" id="registerStudentModalLabel"><i class="bi bi-person-plus-fill me-2 text-accent"></i>Register Examination Student</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'student_register' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="username" class="form-label fw-medium small text-muted mb-1">Username (Login Credentials)</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="e.g. amit_patel" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="password" class="form-label fw-medium small text-muted mb-1">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="first_name" class="form-label fw-medium small text-muted mb-1">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="last_name" class="form-label fw-medium small text-muted mb-1">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label fw-medium small text-muted mb-1">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="student@college.edu" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label fw-medium small text-muted mb-1">Phone Number</label>
+                            <input type="text" class="form-control" id="phone" name="phone" placeholder="e.g. 9876543210" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="admission_number" class="form-label fw-medium small text-muted mb-1">Admission Number</label>
+                            <input type="text" class="form-control" id="admission_number" name="admission_number" placeholder="e.g. 26BCA101" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="registration_number" class="form-label fw-medium small text-muted mb-1">Registration Number (Optional)</label>
+                            <input type="text" class="form-control" id="registration_number" name="registration_number" placeholder="University Reg No">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="branch" class="form-label fw-medium small text-muted mb-1">Branch / Course</label>
+                            <select class="form-select" id="branch" name="branch" required>
+                                <option value="" disabled selected>Select Branch</option>
+                                {% for branch in branches %}
+                                <option value="{{ branch.id }}">{{ branch.department.code }} - {{ branch.name }} ({{ branch.code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="semester" class="form-label fw-medium small text-muted mb-1">Semester</label>
+                            <select class="form-select" id="semester" name="semester" required>
+                                <option value="" disabled selected>Select Semester</option>
+                                {% for sem in semester_choices %}
+                                <option value="{{ sem }}">Semester {{ sem }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="batch" class="form-label fw-medium small text-muted mb-1">Batch (Optional)</label>
+                            <select class="form-select" id="batch" name="batch">
+                                <option value="" selected>No Batch / None</option>
+                                <option value="A">Batch A</option>
+                                <option value="B">Batch B</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="photo" class="form-label fw-medium small text-muted mb-1">Student Photo</label>
+                            <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-dark-blue text-white"><i class="bi bi-save me-2"></i>Save Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Upload Excel Modal -->
+{% if user.profile.role in 'ADMIN EXAM_CONTROLLER' %}
+<div class="modal fade" id="uploadExcelModal" tabindex="-1" aria-labelledby="uploadExcelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold" id="uploadExcelModalLabel"><i class="bi bi-file-earmark-excel-fill me-2"></i>Bulk Import Students via Excel Workbook / CSV</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'student_bulk_upload' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="alert alert-info py-2 px-3 mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2" style="font-size: 13px;">
+                        <div>
+                            <i class="bi bi-info-circle-fill me-2 text-info"></i>
+                            <strong>Supports Excel Workbook files</strong> (<code>.xlsx</code>, <code>.xls</code>, <code>.xlsm</code>) and CSV files.
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'student_sample_template' %}?format=simple" class="btn btn-light fw-bold text-dark-blue border">
+                                <i class="bi bi-download me-1"></i>2-Column Template
+                            </a>
+                            <a href="{% url 'student_sample_template' %}?format=full" class="btn btn-light fw-bold text-dark-blue border">
+                                <i class="bi bi-download me-1"></i>Full Template
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <label for="default_branch" class="form-label fw-medium small text-muted mb-1">Target Branch / Course</label>
+                            <select class="form-select" id="default_branch" name="default_branch">
+                                <option value="" selected>Auto-Detect / System Default</option>
+                                {% for branch in branches %}
+                                <option value="{{ branch.id }}">{{ branch.department.code }} - {{ branch.name }} ({{ branch.code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="default_semester" class="form-label fw-medium small text-muted mb-1">Target Semester (e.g. S3 / S4)</label>
+                            <select class="form-select" id="default_semester" name="default_semester">
+                                <option value="" selected>Auto-Detect / Sem 1</option>
+                                {% for sem in semester_choices %}
+                                <option value="{{ sem }}" {% if selected_sem == sem|stringformat:'i' %}selected{% endif %}>Semester {{ sem }} (S{{ sem }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="batch" class="form-label fw-medium small text-muted mb-1">Batch Assignment (Optional)</label>
+                            <select class="form-select" id="batch" name="batch">
+                                <option value="NONE" selected>No Batch / None (Do Not Assign Batch)</option>
+                                <option value="AUTO">Auto-Detect Batches (Multi-Sheet / Headers / Roll Restart / 1-40=A)</option>
+                                <option value="SPLIT_40">Split by Roll: Roll 1-40 = Batch A, 41+ = Batch B</option>
+                                <option value="A">Force All to Batch A</option>
+                                <option value="B">Force All to Batch B</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="excel_file" class="form-label fw-medium small text-muted mb-1">Select Excel Workbook (.xlsx / .xls / .xlsm) or CSV (.csv) File</label>
+                        <input type="file" class="form-control" id="excel_file" name="excel_file" accept=".xlsx,.xls,.xlsm,.xltx,.xltm,.csv" required>
+                    </div>
+
+                    <div class="bg-light p-3 rounded border" style="font-size: 12px;">
+                        <h6 class="fw-bold mb-2 text-dark-blue" style="font-size: 13px;">
+                            <i class="bi bi-file-earmark-spreadsheet me-1 text-success"></i>Supported Sheet Formats:
+                        </h6>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <div class="p-2 bg-white rounded border">
+                                    <div class="fw-semibold text-muted mb-1" style="font-size: 11px;">Format A: 2-Column Sheet (Roll No &amp; Name)</div>
+                                    <table class="table table-sm table-bordered bg-white mb-0" style="font-size: 11px;">
+                                        <thead class="table-light text-uppercase">
+                                            <tr>
+                                                <th>Roll No</th>
+                                                <th>Name</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>1</td>
+                                                <td>ABHISHEK KRISHNAN S S</td>
+                                            </tr>
+                                            <tr>
+                                                <td>2</td>
+                                                <td>ABIN VARGHESE</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-2 bg-white rounded border">
+                                    <div class="fw-semibold text-muted mb-1" style="font-size: 11px;">Format B: Full Sheet (With Register No)</div>
+                                    <table class="table table-sm table-bordered bg-white mb-0" style="font-size: 11px;">
+                                        <thead class="table-light text-uppercase">
+                                            <tr>
+                                                <th>Roll No</th>
+                                                <th>Register Number</th>
+                                                <th>Name</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>1</td>
+                                                <td>PJR25CS002</td>
+                                                <td>ABHINAV P</td>
+                                            </tr>
+                                            <tr>
+                                                <td>2</td>
+                                                <td>PJR25CS004</td>
+                                                <td>ABHISHEK K ANEESH</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <small class="text-muted d-block mt-2"><i class="bi bi-info-circle me-1"></i>Any top title lines (such as <em>S3 CSE BATCH A</em>) are automatically recognized and skipped.</small>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success text-white"><i class="bi bi-check-circle me-2"></i>Upload &amp; Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+

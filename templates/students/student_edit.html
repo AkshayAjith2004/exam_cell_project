@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Student | College Exam Seating Arrangement System{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-dark-blue text-decoration-none">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'student_list' %}" class="text-dark-blue text-decoration-none">Students</a></li>
+<li class="breadcrumb-item active" aria-current="page">Edit</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-dark-blue text-white py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-pencil-square me-2 text-accent"></i>Edit Student Profile</h5>
+            </div>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="first_name" class="form-label fw-medium small text-muted mb-1">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ student.user.first_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="last_name" class="form-label fw-medium small text-muted mb-1">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ student.user.last_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label fw-medium small text-muted mb-1">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ student.user.email }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label fw-medium small text-muted mb-1">Phone Number</label>
+                            <input type="text" class="form-control" id="phone" name="phone" value="{{ student.phone }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="admission_number" class="form-label fw-medium small text-muted mb-1">Admission Number</label>
+                            <input type="text" class="form-control" id="admission_number" name="admission_number" value="{{ student.admission_number }}" required>
+                            <small class="text-muted">Unique student admission identifier.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="registration_number" class="form-label fw-medium small text-muted mb-1">Registration Number</label>
+                            <input type="text" class="form-control" id="registration_number" name="registration_number" value="{{ student.registration_number|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="branch" class="form-label fw-medium small text-muted mb-1">Branch / Course</label>
+                            <select class="form-select" id="branch" name="branch" required>
+                                {% for branch in branches %}
+                                <option value="{{ branch.id }}" {% if student.branch.id == branch.id %}selected{% endif %}>{{ branch.department.code }} - {{ branch.name }} ({{ branch.code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="semester" class="form-label fw-medium small text-muted mb-1">Semester</label>
+                            <select class="form-select" id="semester" name="semester" required>
+                                {% for sem in semester_choices %}
+                                <option value="{{ sem }}" {% if student.semester == sem %}selected{% endif %}>Semester {{ sem }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="batch" class="form-label fw-medium small text-muted mb-1">Batch (Optional)</label>
+                            <select class="form-select" id="batch" name="batch">
+                                <option value="" {% if not student.batch %}selected{% endif %}>No Batch / None</option>
+                                <option value="A" {% if student.batch == 'A' %}selected{% endif %}>Batch A</option>
+                                <option value="B" {% if student.batch == 'B' %}selected{% endif %}>Batch B</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="photo" class="form-label fw-medium small text-muted mb-1">Student Photo</label>
+                            {% if student.photo %}
+                            <div class="mb-2">
+                                <img src="{{ student.photo.url }}" alt="Photo" class="img-thumbnail rounded" style="width: 100px; height: 100px; object-fit: cover;">
+                            </div>
+                            {% endif %}
+                            <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light p-3 d-flex justify-content-end gap-2">
+                    <a href="{% url 'student_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-dark-blue text-white"><i class="bi bi-save me-2"></i>Update Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

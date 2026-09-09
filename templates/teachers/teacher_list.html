@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Teacher Registry | College Exam Seating Arrangement System{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-dark-blue text-decoration-none">Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">Teachers</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold text-dark-blue mb-0"><i class="bi bi-person-badge-fill text-accent me-2"></i>Teacher Registry</h4>
+        <button type="button" class="btn btn-dark-blue text-white" data-bs-toggle="modal" data-bs-target="#registerTeacherModal">
+            <i class="bi bi-person-plus-fill me-2"></i>Register Teacher
+        </button>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 py-3">
+        <h5 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-list-task text-primary me-2"></i>Available Faculty</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if teachers %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                <thead class="table-light text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                    <tr>
+                        <th class="ps-3">Employee ID</th>
+                        <th>Teacher Name</th>
+                        <th>Email & Contact</th>
+                        <th>Department</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for teacher in teachers %}
+                    <tr>
+                        <td class="ps-3"><span class="fw-bold text-dark-blue">{{ teacher.employee_id }}</span></td>
+                        <td>
+                            <div class="fw-bold text-dark-blue">{{ teacher.user.get_full_name }}</div>
+                            <small class="text-muted">Username: {{ teacher.user.username }}</small>
+                        </td>
+                        <td>
+                            <div>{{ teacher.user.email }}</div>
+                            <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ teacher.phone }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ teacher.department.name }} ({{ teacher.department.code }})</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-person-video3 fa-3x mb-3 text-secondary"></i>
+            <p class="mb-0">No teachers registered yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Register Teacher Modal -->
+<div class="modal fade" id="registerTeacherModal" tabindex="-1" aria-labelledby="registerTeacherModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark-blue text-white">
+                <h5 class="modal-title fw-bold" id="registerTeacherModalLabel"><i class="bi bi-person-plus-fill me-2 text-accent"></i>Register Faculty Member</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'teacher_register' %}">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="username" class="form-label fw-medium small text-muted mb-1">Username (Login ID)</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="e.g. prof_ramesh" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="password" class="form-label fw-medium small text-muted mb-1">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+                        </div>
+                        <div class="col-6">
+                            <label for="first_name" class="form-label fw-medium small text-muted mb-1">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+                        <div class="col-6">
+                            <label for="last_name" class="form-label fw-medium small text-muted mb-1">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="email" class="form-label fw-medium small text-muted mb-1">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="faculty@college.edu" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="employee_id" class="form-label fw-medium small text-muted mb-1">Employee ID</label>
+                            <input type="text" class="form-control" id="employee_id" name="employee_id" placeholder="e.g. EMP102" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="department" class="form-label fw-medium small text-muted mb-1">Department</label>
+                            <select class="form-select" id="department" name="department" required>
+                                <option value="" disabled selected>Select Department</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept.id }}">{{ dept.name }} ({{ dept.code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="phone" class="form-label fw-medium small text-muted mb-1">Phone Number</label>
+                            <input type="text" class="form-control" id="phone" name="phone" placeholder="Contact number" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-dark-blue text-white"><i class="bi bi-save me-2"></i>Save Teacher</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

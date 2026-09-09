@@ -1,0 +1,431 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}College Exam Seating Arrangement System | CE Poonjar{% endblock %}</title>
+    <meta name="description" content="Official examination seating management portal of College of Engineering Poonjar.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="{% static 'core_app/style.css' %}">
+</head>
+<body>
+
+    {% if user.is_authenticated and request.resolver_match.url_name != 'home' %}
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="border-end bg-dark-blue text-white" id="sidebar-wrapper">
+            <div class="sidebar-heading border-bottom p-3">
+                <a href="{% url 'home' %}" class="text-white text-decoration-none d-flex align-items-center gap-2">
+                    <img src="{% static 'core_app/images/logo.png' %}" alt="Logo" class="sidebar-logo rounded-circle bg-white" style="width: 38px; height: 38px; padding: 2px;">
+                    <div class="d-flex flex-column">
+                        <span class="fw-bold fs-6 tracking-wide">CE POONJAR</span>
+                        <small class="text-white-50" style="font-size: 10px; letter-spacing: 0.5px;">Exam Manager</small>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="user-summary p-3 d-flex align-items-center gap-3 bg-opacity-10 bg-white">
+                {% if user.profile.photo %}
+                    <img src="{{ user.profile.photo.url }}" alt="{{ user.username }} profile photo" class="rounded-circle border border-white shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">
+                {% else %}
+                    <div class="avatar bg-accent text-dark-blue rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
+                        {{ user.username|slice:":2"|upper }}
+                    </div>
+                {% endif %}
+                <div class="user-info">
+                    <div class="fw-semibold text-truncate" style="max-width: 150px; font-size: 13px;">{{ user.get_full_name|default:user.username }}</div>
+                    <span class="badge bg-accent text-dark-blue text-uppercase" style="font-size: 9px; font-weight: 700;">{{ user.profile.get_role_display }}</span>
+                </div>
+            </div>
+
+            <div class="list-group list-group-flush sidebar-nav-items scrollable-sidebar">
+                <a href="/" class="list-group-item list-group-item-action bg-dark-blue text-white py-3 {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                    <i class="bi bi-house-door me-2"></i> Home
+                </a>
+                <a href="{% url 'dashboard' %}" class="list-group-item list-group-item-action bg-dark-blue text-white py-3 {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-grid-1x2 me-2"></i> Dashboard
+                </a>
+                
+                {% if user.profile.role in 'ADMIN EXAM_CONTROLLER' %}
+                <span class="sidebar-section-header px-3 pt-3 pb-1 text-white-50 text-uppercase" style="font-size: 10px; font-weight: 700; letter-spacing: 0.5px;">Configuration</span>
+                <a href="{% url 'department_list' %}" class="list-group-item list-group-item-action bg-dark-blue text-white py-3 {% if 'departments' in request.path and 'branch' not in request.path %}active{% endif %}">
+                    <i class="bi bi-diagram-3 me-2"></i> Departments & AY
+                </a>
+                <a href="{% url 'branch_list' %}" class="list-group-item list-group-item-action bg-dark-blue text-white py-3 {% if 'branch' in request.path %}active{% endif %}">
+                    <i class="bi bi-git me-2"></i> Branches
+                </a>
+                <a href="{% url 'classroom_list' %}" class="list-group-item list-group-item-action bg-dark-blue text-white py-3 {% if 'classrooms' in request.path %}active{% endif %}">
+                    <i class="bi bi-door-open me-2"></i> Examination Halls
+                </a>
+                {% endif %}
+
+                {% if user.profile.role in 'ADMIN EXAM_CONTROLLER TEACHER' %}
+                <span class="sidebar-section-header px-3 pt-3 pb-1 text-white-50 text-uppercase" style="font-size: 10px; font-weight: 700; letter-spacing: 0.5px;">Academics</span>
+                <a href="{% url 'subject_list' %}" class="list-group-item list-group-item-action bg-dark-blue text-white py-3 {% if 'subjects' in request.path %}active{% endif %}">
+                    <i class="bi bi-book me-2"></i> Subjects Registry
+                </a>
+                <a href="{% url 'student_list' %}" class="list-group-item list-group-item-action bg-dark-blue text-white py-3 {% if 'students' in request.path %}active{% endif %}">
+                    <i class="bi bi-people me-2"></i> Examination Students
+                </a>
+                {% endif %}
+
+                {% if user.profile.role in 'ADMIN EXAM_CONTROLLER' %}
+                <a href="{% url 'teacher_list' %}" class="list-group-item list-group-item-action bg-dark-blue text-white py-3 {% if 'teachers' in request.path %}active{% endif %}">
+                    <i class="bi bi-person-badge me-2"></i> Teacher Registration
+                </a>
+                {% endif %}
+
+                <span class="sidebar-section-header px-3 pt-3 pb-1 text-white-50 text-uppercase" style="font-size: 10px; font-weight: 700; letter-spacing: 0.5px;">Examination</span>
+                {% if user.profile.role in 'ADMIN EXAM_CONTROLLER' %}
+                <a href="{% url 'exam_list' %}" class="list-group-item list-group-item-action bg-dark-blue text-white py-3 {% if 'exams' in request.path %}active{% endif %}">
+                    <i class="bi bi-file-earmark-check me-2"></i> Examinations
+                </a>
+                {% endif %}
+                
+                {% if user.profile.role in 'ADMIN EXAM_CONTROLLER TEACHER STUDENT' %}
+                <a href="{% url 'timetable_list' %}" class="list-group-item list-group-item-action bg-dark-blue text-white py-3 {% if 'timetable' in request.path %}active{% endif %}">
+                    <i class="bi bi-calendar-event me-2"></i> Examination Schedule
+                </a>
+                {% endif %}
+
+                {% if user.profile.role in 'ADMIN EXAM_CONTROLLER' %}
+                <a href="{% url 'generate_seating' %}" class="list-group-item list-group-item-action bg-dark-blue text-white py-3 {% if 'generate' in request.path %}active{% endif %}">
+                    <i class="bi bi-cpu me-2"></i> Examination Seating
+                </a>
+                {% endif %}
+                
+                <a href="{% url 'seating_details' %}" class="list-group-item list-group-item-action bg-dark-blue text-white py-3 {% if 'seating' in request.path and 'generate' not in request.path %}active{% endif %}">
+                    <i class="bi bi-chair me-2"></i> Seating Arrangements
+                </a>
+                <a href="{% url 'notification_list' %}" class="list-group-item list-group-item-action bg-dark-blue text-white py-3 {% if 'notifications' in request.path %}active{% endif %}">
+                    <i class="bi bi-megaphone me-2"></i> Notice Board
+                </a>
+            </div>
+            
+            <div class="sidebar-footer border-top p-3 mt-auto">
+                <a href="{% url 'logout' %}" class="text-white-50 text-decoration-none d-flex align-items-center gap-2 hover-red">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Log Out</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="w-100 bg-light d-flex flex-column min-vh-100">
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom px-3 py-2 shadow-sm">
+                <div class="container-fluid">
+                    <button class="btn btn-outline-dark-blue btn-sm border-0 d-md-none" id="menu-toggle">
+                        <i class="bi bi-list fs-4"></i>
+                    </button>
+                    
+                    <!-- Breadcrumbs -->
+                    <nav aria-label="breadcrumb" class="d-none d-md-inline-block ms-2">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-dark-blue text-decoration-none">Home</a></li>
+                            {% block breadcrumbs %}
+                            <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                            {% block breadcrumbs_sub %}{% endblock %}
+                            {% endblock %}
+                        </ol>
+                    </nav>
+
+                    <div class="ms-auto d-flex align-items-center gap-3">
+                        <button type="button" class="theme-toggle btn btn-outline-secondary btn-sm d-flex align-items-center gap-2" aria-label="Toggle dark mode">
+                            <i class="theme-toggle-icon bi bi-moon-fill"></i>
+                            <span class="theme-toggle-text d-none d-sm-inline">Dark</span>
+                        </button>
+                        <span class="badge bg-dark-blue text-white p-2 d-none d-sm-inline-block">
+                            <i class="bi bi-clock me-1"></i> <span id="headerClock"></span>
+                        </span>
+                        <div class="dropdown">
+                            <a href="#" class="d-flex align-items-center text-decoration-none text-dark dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {% if user.profile.photo %}
+                                    <img src="{{ user.profile.photo.url }}" alt="Profile" class="rounded-circle me-2 border" style="width: 28px; height: 28px; object-fit: cover;">
+                                {% endif %}
+                                <span class="fw-semibold me-2">{{ user.first_name|default:user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2 text-danger"></i>Log Out</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content Body -->
+            <div class="container-fluid p-4 flex-grow-1">
+                <!-- Notifications Block -->
+                {% if messages %}
+                <div class="messages-container mb-4">
+                    {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'warning' %}warning{% else %}success{% endif %} alert-dismissible fade show border-0 shadow-sm" role="alert">
+                        <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle-fill{% elif message.tags == 'warning' %}bi-info-circle-fill{% else %}bi-check-circle-fill{% endif %} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </div>
+
+            <!-- Footer -->
+            <footer class="bg-white border-top text-center py-3 text-muted" style="font-size: 12px;">
+                <p class="mb-0">&copy; 2026 College of Engineering Poonjar. Managed by I.H.R.D., A Govt. of Kerala Undertaking.</p>
+            </footer>
+        </div>
+    </div>
+    {% else %}
+    <!-- Public Layout -->
+    <div class="min-vh-100 bg-light">
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 1030;">
+            <button type="button" class="theme-toggle btn btn-outline-dark-blue btn-sm d-flex align-items-center gap-2" aria-label="Toggle dark mode">
+                <i class="theme-toggle-icon bi bi-moon-fill"></i>
+                <span class="theme-toggle-text d-none d-sm-inline">Dark</span>
+            </button>
+        </div>
+        {% block public_content %}{% endblock %}
+    </div>
+    {% endif %}
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Sidebar Toggling
+        const menuToggle = document.getElementById('menu-toggle');
+        const wrapper = document.getElementById('wrapper');
+        if (menuToggle && wrapper) {
+            menuToggle.addEventListener('click', event => {
+                event.preventDefault();
+                wrapper.classList.toggle('toggled');
+            });
+        }
+
+        // Live Clock in Header
+        function updateClock() {
+            const clockEl = document.getElementById('headerClock');
+            if (clockEl) {
+                const now = new Date();
+                clockEl.textContent = now.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true 
+                });
+            }
+        }
+
+        function applyTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            document.documentElement.setAttribute('data-theme', theme);
+            document.querySelectorAll('.theme-toggle').forEach(button => {
+                const icon = button.querySelector('.theme-toggle-icon');
+                const label = button.querySelector('.theme-toggle-text');
+                if (icon) {
+                    icon.className = `theme-toggle-icon bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'}`;
+                }
+                if (label) {
+                    label.textContent = theme === 'dark' ? 'Light' : 'Dark';
+                }
+            });
+        }
+
+        const savedTheme = localStorage.getItem('theme');
+        const preferredTheme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        applyTheme(preferredTheme);
+
+        document.querySelectorAll('.theme-toggle').forEach(button => {
+            button.addEventListener('click', () => {
+                const nextTheme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                applyTheme(nextTheme);
+                localStorage.setItem('theme', nextTheme);
+            });
+        });
+
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+    
+    <!-- Floating Chatbot Widget -->
+    <div id="cep-chatbot-btn" class="chatbot-toggle-btn d-flex align-items-center justify-content-center" title="Ask CEP Assistant">
+        <i class="bi bi-chat-dots-fill fs-3"></i>
+    </div>
+    
+    <div id="cep-chatbot-window" class="chatbot-window card border-0 shadow-lg">
+        <div class="chatbot-header bg-dark-blue text-white p-3 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <div class="chatbot-avatar bg-accent text-dark-blue rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 13px;">
+                    AI
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-0" style="font-size: 13px;">CEP Exam Assistant</h6>
+                    <small class="text-white-50" style="font-size: 9px; font-weight: 500;">Active | Powered by IHRD</small>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white btn-sm" id="cep-chatbot-close"></button>
+        </div>
+        
+        <div class="chatbot-body p-3 overflow-y-auto" id="cep-chatbot-messages">
+            <div class="chatbot-message bot-message mb-3">
+                <div class="message-bubble p-2.5 rounded bg-light text-muted small" style="line-height: 1.4;">
+                    Hello! I am your **CE Poonjar Exam Assistant**. How can I help you today? You can ask me about:
+                    <ul class="mb-0 mt-1 ps-3">
+                        <li>Exam Timetables & Schedulers</li>
+                        <li>Seating Generation Strategies</li>
+                        <li>Room Grid Capacities</li>
+                        <li>Student / Staff Signups</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chatbot-footer p-2 border-top bg-light">
+            <form id="cep-chatbot-form" class="d-flex gap-1">
+                <input type="text" id="cep-chatbot-input" class="form-control form-control-sm" placeholder="Ask a question..." required>
+                <button type="submit" class="btn btn-dark-blue btn-sm px-2 text-white"><i class="bi bi-send-fill"></i></button>
+            </form>
+        </div>
+    </div>
+    
+    <style>
+        .chatbot-toggle-btn {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: var(--dark-blue);
+            color: var(--white);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+            cursor: pointer;
+            z-index: 1040;
+            transition: all 0.25s ease;
+        }
+        .chatbot-toggle-btn:hover {
+            transform: scale(1.08);
+            background-color: #0c3d69;
+        }
+        .chatbot-window {
+            position: fixed;
+            bottom: 95px;
+            right: 25px;
+            width: 330px;
+            height: 430px;
+            border-radius: 12px;
+            overflow: hidden;
+            z-index: 1040;
+            display: none;
+            flex-direction: column;
+            border: 1px solid var(--gray-200);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
+        }
+        .chatbot-body {
+            flex-grow: 1;
+            background-color: #f8f9fa;
+        }
+        .message-bubble {
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .user-message .message-bubble {
+            background-color: var(--light-blue) !important;
+            color: var(--dark-blue) !important;
+            border-bottom-right-radius: 2px;
+        }
+        .bot-message .message-bubble {
+            background-color: var(--white) !important;
+            color: var(--gray-800) !important;
+            border-bottom-left-radius: 2px;
+        }
+    </style>
+    
+    <script>
+        const chatBtn = document.getElementById('cep-chatbot-btn');
+        const chatWin = document.getElementById('cep-chatbot-window');
+        const chatClose = document.getElementById('cep-chatbot-close');
+        const chatForm = document.getElementById('cep-chatbot-form');
+        const chatInput = document.getElementById('cep-chatbot-input');
+        const chatMsgs = document.getElementById('cep-chatbot-messages');
+        
+        chatBtn.addEventListener('click', () => {
+            if (chatWin.style.display === 'flex') {
+                chatWin.style.display = 'none';
+            } else {
+                chatWin.style.display = 'flex';
+                chatInput.focus();
+            }
+        });
+        
+        chatClose.addEventListener('click', () => {
+            chatWin.style.display = 'none';
+        });
+        
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = chatInput.value.trim();
+            if (!text) return;
+            
+            // Add user message
+            appendMessage(text, 'user');
+            chatInput.value = '';
+            
+            // Auto reply with typing indicator simulation
+            setTimeout(() => {
+                const reply = getBotReply(text);
+                appendMessage(reply, 'bot');
+            }, 500);
+        });
+        
+        function appendMessage(text, sender) {
+            const div = document.createElement('div');
+            div.className = `chatbot-message ${sender}-message mb-3 d-flex ` + (sender === 'user' ? 'justify-content-end' : 'justify-content-start');
+            
+            const inner = document.createElement('div');
+            inner.className = `message-bubble p-2.5 rounded small ` + (sender === 'user' ? 'bg-primary text-white' : 'bg-white text-dark');
+            inner.style.maxWidth = '85%';
+            inner.style.lineHeight = '1.4';
+            inner.innerHTML = text.replace(/\n/g, '<br>');
+            
+            div.appendChild(inner);
+            chatMsgs.appendChild(div);
+            chatMsgs.scrollTop = chatMsgs.scrollHeight;
+        }
+        
+        function getBotReply(text) {
+            const q = text.toLowerCase();
+            if (q.includes('seat') || q.includes('arrange') || q.includes('allocat')) {
+                return "Seat charts are generated in **seating_app** using round-robin interleaving to separate students of the same department/semester. Admin and controllers can trigger generation, clear charts, or manually swap seats.";
+            }
+            if (q.includes('time') || q.includes('date') || q.includes('schedule') || q.includes('slot')) {
+                return "The exam schedule timetables are managed in the **timetable** module. Timetables can have PDF/image schedules attached. Faculty and students can see their relevant schedules on their dashboard.";
+            }
+            if (q.includes('room') || q.includes('hall') || q.includes('class')) {
+                return "Halls are configured in the **classrooms** app. Each room has specified Rows and Columns. The total seating capacity is dynamically calculated from the grid dimension.";
+            }
+            if (q.includes('role') || q.includes('signup') || q.includes('register')) {
+                return "Users can sign up dynamically as a Student, Teacher, or Controller on our Signup page. Role permissions control access to CRUD registries and generation engines.";
+            }
+            if (q.includes('admin') || q.includes('controller') || q.includes('teacher') || q.includes('student')) {
+                return "**Admins** configure departments/classrooms. **Controllers** generate seating plans. **Teachers** manage schedules. **Students** view seat tickets.";
+            }
+            if (q.includes('hello') || q.includes('hi') || q.includes('hey')) {
+                return "Hello! Hope you are doing well. Ask me any question about the CE Poonjar Exam Seating portal!";
+            }
+            return "Thank you for asking. For specific guidelines, please refer to the notices published on the **Notice Board**, or reach the administrative office at cepinfo@ihrd.ac.in.";
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+
+{% block title %}Seating Arrangements | College Exam Seating Arrangement System{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-dark-blue text-decoration-none">Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">Seating Details</li>
+{% endblock %}
+
+{% block content %}
+{% if no_allocations %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm text-center py-5">
+            <div class="card-body">
+                <i class="bi bi-chair fa-3x mb-3 text-secondary d-block"></i>
+                <h4 class="fw-bold text-dark-blue">No Seating Arrangements Generated</h4>
+                <p class="text-muted">No students have been assigned seats for any examinations yet.</p>
+                {% if user.profile.role in 'ADMIN EXAM_CONTROLLER' %}
+                    <a href="{% url 'generate_seating' %}" class="btn btn-dark-blue text-white mt-2">
+                        <i class="bi bi-cpu me-2"></i>Generate Seating Now
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row g-4">
+    <!-- Left Navigation: Allocated Slots -->
+    <div class="col-lg-3">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 py-3">
+                <h6 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-clock-history text-primary me-2"></i>Scheduled Slots</h6>
+            </div>
+            <div class="list-group list-group-flush slot-selection-list">
+                {% for slot in slots %}
+                <a href="?exam_id={{ slot.exam__id }}&date={{ slot.timetable__exam_date|date:'Y-m-d' }}&session={{ slot.timetable__session }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 {% if selected_exam.id == slot.exam__id and current_date_str == slot.timetable__exam_date|date:'Y-m-d' and current_session == slot.timetable__session %}active{% endif %}">
+                    <div>
+                        <div class="fw-semibold">{{ slot.timetable__exam_date|date:"d-M-Y" }}</div>
+                        <small class="text-muted">{{ slot.timetable__session }}</small>
+                    </div>
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ slot.count }} seats</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Clear Seating (Admin/Controller only) -->
+        {% if user.profile.role in 'ADMIN EXAM_CONTROLLER' %}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 py-3">
+                <h6 class="fw-bold mb-0 text-danger"><i class="bi bi-trash text-danger me-2"></i>Clear Records</h6>
+            </div>
+            <div class="card-body d-flex flex-column gap-2">
+                <form method="POST" action="{% url 'clear_seating' %}" onsubmit="return confirm('Are you sure you want to clear seating for this slot?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="exam" value="{{ selected_exam.id }}">
+                    <input type="hidden" name="date" value="{{ current_date_str }}">
+                    <input type="hidden" name="session" value="{{ current_session }}">
+                    <button type="submit" class="btn btn-outline-danger btn-sm w-100 py-2"><i class="bi bi-x-circle me-1"></i>Clear This Slot</button>
+                </form>
+                <form method="POST" action="{% url 'clear_all_seating' %}" onsubmit="return confirm('Are you sure you want to clear ALL seating arrangements?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm w-100 py-2 text-white"><i class="bi bi-trash-fill me-1"></i>Clear All Exams</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right: Visual seating layout & details -->
+    <div class="col-lg-9">
+        <!-- Date and Session Info Card -->
+        <div class="card border-0 shadow-sm mb-4 bg-dark-blue text-white rounded">
+            <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <span class="badge bg-accent text-dark-blue text-uppercase fw-bold mb-2">{{ selected_exam.code }}</span>
+                    <h5 class="fw-bold mb-1">{{ selected_exam.name }}</h5>
+                    <p class="mb-0 fs-6 text-white-50"><i class="bi bi-calendar me-2"></i>{{ current_date_str }} &nbsp;|&nbsp; <i class="bi bi-clock me-2"></i>{{ current_session }}</p>
+                </div>
+                <!-- Printable reports list dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-accent text-dark-blue dropdown-toggle fw-semibold" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-printer me-2 text-dark-blue"></i>Print Reports
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2" style="font-size: 13px;">
+                        {% if selected_classroom %}
+                        <li>
+                            <a class="dropdown-item py-2" href="{% url 'print_report' report_type='hall_chart' %}?exam_id={{ selected_exam.id }}&date={{ current_date_str }}&session={{ current_session }}&classroom_id={{ selected_classroom.id }}" target="_blank">
+                                <i class="bi bi-grid-3x3-gap text-primary me-2"></i>Hall Seating Chart ({{ selected_classroom.room_number }})
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item py-2" href="{% url 'print_report' report_type='desk_slips' %}?exam_id={{ selected_exam.id }}&date={{ current_date_str }}&session={{ current_session }}&classroom_id={{ selected_classroom.id }}" target="_blank">
+                                <i class="bi bi-card-list text-primary me-2"></i>Desk Slips ({{ selected_classroom.room_number }})
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% endif %}
+                        <li>
+                            <a class="dropdown-item py-2" href="{% url 'print_report' report_type='notice_board' %}?exam_id={{ selected_exam.id }}&date={{ current_date_str }}&session={{ current_session }}" target="_blank">
+                                <i class="bi bi-clipboard-data text-primary me-2"></i>Notice Board (All Students)
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item py-2" href="{% url 'print_report' report_type='branch_wise' %}?exam_id={{ selected_exam.id }}&date={{ current_date_str }}&session={{ current_session }}" target="_blank">
+                                <i class="bi bi-bar-chart-steps text-primary me-2"></i>Branch-wise Summary Sheet
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Selector Tabs -->
+        {% if classrooms %}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 py-3">
+                <h6 class="fw-bold text-muted mb-2 text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">Select Examination Hall</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for room in classrooms %}
+                    <a href="?exam_id={{ selected_exam.id }}&date={{ current_date_str }}&session={{ current_session }}&classroom_id={{ room.id }}" class="btn btn-outline-dark-blue py-2 px-3 {% if selected_classroom.id == room.id %}active text-white bg-dark-blue{% endif %}" style="font-size: 13px;">
+                        <i class="bi bi-door-open me-2"></i>{{ room.room_number }}
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis ms-2" style="font-size: 10px;">{{ room.capacity }} seats</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if selected_classroom %}
+        <!-- Visual Grid -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-grid-3x3-gap-fill text-primary me-2"></i>Visual Seating Grid ({{ selected_classroom.room_number }})</h5>
+                <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ selected_classroom.rows }} Rows × {{ selected_classroom.columns }} Columns</span>
+            </div>
+            <div class="card-body p-4 bg-light-blue-subtle" style="border-radius: 8px;">
+                <div class="classroom-platform text-center mb-4 p-2 rounded shadow-sm border border-secondary text-white bg-secondary">
+                    <span class="fw-bold text-uppercase tracking-wider" style="font-size: 11px;">FRONT / BOARD / INVIGILATOR TABLE</span>
+                </div>
+                
+                <div class="seating-grid-wrapper">
+                    <div class="seating-layout-grid" style="grid-template-columns: repeat({{ selected_classroom.columns }}, 1fr); min-width: 600px;">
+                        {% for row in seating_grid %}
+                            {% for seat in row %}
+                                {% if seat.allocation %}
+                                <div class="seating-cell-card occupied dept-{{ seat.allocation.student.branch.department.code|lower }} cursor-pointer" 
+                                     data-bs-toggle="modal" 
+                                     data-bs-target="#editSeatModal" 
+                                     data-alloc-id="{{ seat.allocation.id }}" 
+                                     data-student-name="{{ seat.allocation.student.user.get_full_name }}" 
+                                     data-student-admission="{{ seat.allocation.student.admission_number }}" 
+                                     data-current-seat="Row {{ seat.row }}, Col {{ seat.col }}" 
+                                     data-current-row="{{ seat.row }}" 
+                                     data-current-col="{{ seat.col }}">
+                                    <div class="seat-label" style="font-size: 9px;">R{{ seat.row }} C{{ seat.col }}</div>
+                                    <div class="student-roll fw-bold" style="font-size: 12px;">{{ seat.allocation.student.admission_number }}</div>
+                                    <div class="student-dept" style="font-size: 10px;">{{ seat.allocation.student.branch.code }}</div>
+                                    <div class="student-subject text-truncate" style="font-size: 8px;" title="{{ seat.allocation.timetable.subject.subject_code }}">{{ seat.allocation.timetable.subject.subject_code }}</div>
+                                </div>
+                                {% else %}
+                                <div class="seating-cell-card empty">
+                                    <div class="seat-label" style="font-size: 9px;">R{{ seat.row }} C{{ seat.col }}</div>
+                                    <div class="empty-text text-muted" style="font-size: 10px;">Empty</div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="legend-container mt-4 pt-3 border-top d-flex flex-wrap justify-content-center gap-3">
+                    <div class="legend-item"><span class="legend-box empty"></span> <small>Empty Seat</small></div>
+                    <div class="legend-item"><span class="legend-box dept-bca"></span> <small>BCA</small></div>
+                    <div class="legend-item"><span class="legend-box dept-mca"></span> <small>MCA</small></div>
+                    <div class="legend-item"><span class="legend-box dept-btech"></span> <small>B.Tech</small></div>
+                    <div class="legend-item"><span class="legend-box dept-diploma"></span> <small>Diploma</small></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Allocation List Table -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-list-ol text-primary me-2"></i>Students List ({{ selected_classroom.room_number }})</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if summary_list %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Seat Position</th>
+                                <th>Admission Number</th>
+                                <th>Student Name</th>
+                                <th>Branch & Semester</th>
+                                <th>Exam / Subject</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alloc in summary_list %}
+                            <tr>
+                                <td class="ps-3 fw-bold text-dark-blue">Row {{ alloc.row_index }}, Col {{ alloc.col_index }}</td>
+                                <td><span class="fw-semibold text-primary">{{ alloc.student.admission_number }}</span></td>
+                                <td>{{ alloc.student.user.get_full_name }}</td>
+                                <td>{{ alloc.student.branch.code }} - Sem {{ alloc.student.semester }}</td>
+                                <td>
+                                    <div class="fw-semibold">{{ alloc.timetable.subject.subject_name }}</div>
+                                    <small class="text-muted">{{ alloc.timetable.subject.subject_code }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill me-2"></i>Please select a classroom above to display the seating visual grid.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Manual Edit Seating Modal -->
+{% if user.profile.role in 'ADMIN EXAM_CONTROLLER' %}
+<div class="modal fade" id="editSeatModal" tabindex="-1" aria-labelledby="editSeatModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark-blue text-white">
+                <h5 class="modal-title fw-bold" id="editSeatModalLabel"><i class="bi bi-pencil-square me-2 text-accent"></i>Manual Seating Swap / Adjust</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'edit_seating' %}">
+                {% csrf_token %}
+                <input type="hidden" name="alloc_id" id="modalAllocId">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-medium mb-1">Student</label>
+                        <input type="text" class="form-control bg-light" id="modalStudentName" readonly>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label text-muted small fw-medium mb-1">Admission No</label>
+                            <input type="text" class="form-control bg-light" id="modalStudentAdmission" readonly>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label text-muted small fw-medium mb-1">Current Seat Position</label>
+                            <input type="text" class="form-control bg-light" id="modalCurrentSeat" readonly>
+                        </div>
+                    </div>
+                    <div class="row bg-light p-3 border rounded mt-2">
+                        <h6 class="fw-bold text-dark-blue mb-3">Enter New Target Seat coordinates</h6>
+                        <div class="col-6 mb-3">
+                            <label for="modalRow" class="form-label fw-medium small text-muted mb-1">New Row Index</label>
+                            <input type="number" class="form-control" id="modalRow" name="row" min="1" max="25" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label for="modalCol" class="form-label fw-medium small text-muted mb-1">New Column Index</label>
+                            <input type="number" class="form-control" id="modalCol" name="col" min="1" max="25" required>
+                        </div>
+                        <small class="text-muted" style="font-size: 11px;"><i class="bi bi-info-circle-fill me-1"></i>If another student is currently assigned to this target seat, their seat positions will be **swapped** automatically.</small>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-dark-blue text-white"><i class="bi bi-check-circle me-1"></i>Confirm Seat Change</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Bind modal parameters dynamically on click
+    const editSeatModal = document.getElementById('editSeatModal');
+    if (editSeatModal) {
+        editSeatModal.addEventListener('show.bs.modal', function (event) {
+            const card = event.relatedTarget;
+            const allocId = card.getAttribute('data-alloc-id');
+            const studentName = card.getAttribute('data-student-name');
+            const studentAdmission = card.getAttribute('data-student-admission');
+            const currentSeat = card.getAttribute('data-current-seat');
+            const currentRow = card.getAttribute('data-current-row');
+            const currentCol = card.getAttribute('data-current-col');
+            
+            document.getElementById('modalAllocId').value = allocId;
+            document.getElementById('modalStudentName').value = studentName;
+            document.getElementById('modalStudentAdmission').value = studentAdmission;
+            document.getElementById('modalCurrentSeat').value = currentSeat;
+            document.getElementById('modalRow').value = currentRow;
+            document.getElementById('modalCol').value = currentCol;
+        });
+    }
+</script>
+{% endblock %}

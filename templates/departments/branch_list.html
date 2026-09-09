@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Branches | College Exam Seating Arrangement System{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-dark-blue text-decoration-none">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'department_list' %}" class="text-dark-blue text-decoration-none">Departments</a></li>
+<li class="breadcrumb-item active" aria-current="page">Branches</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold text-dark-blue mb-0"><i class="bi bi-git text-accent me-2"></i>Academic Branches / Courses</h4>
+        <button type="button" class="btn btn-dark-blue text-white" data-bs-toggle="modal" data-bs-target="#addBranchModal">
+            <i class="bi bi-plus-circle me-2"></i>Add Branch
+        </button>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 py-3">
+        <h5 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-list-nested text-primary me-2"></i>Available Branches</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if branches %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                <thead class="table-light text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                    <tr>
+                        <th class="ps-3">Branch Code</th>
+                        <th>Branch Name</th>
+                        <th>Department</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for branch in branches %}
+                    <tr>
+                        <td class="ps-3 fw-bold text-dark-blue"><span class="badge bg-secondary-subtle text-secondary-emphasis">{{ branch.code }}</span></td>
+                        <td>{{ branch.name }}</td>
+                        <td><span class="badge bg-dark-blue text-white">{{ branch.department.code }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center py-4 text-muted">No academic branches mapped yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Branch Modal -->
+<div class="modal fade" id="addBranchModal" tabindex="-1" aria-labelledby="addBranchModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark-blue text-white">
+                <h5 class="modal-title fw-bold" id="addBranchModalLabel"><i class="bi bi-git me-2 text-accent"></i>Add New Branch</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="dept" class="form-label fw-medium small text-muted mb-1">Select Department</label>
+                        <select class="form-select" id="dept" name="department" required>
+                            <option value="" disabled selected>Select</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.name }} ({{ dept.code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="branch_code" class="form-label fw-medium small text-muted mb-1">Branch Code</label>
+                        <input type="text" class="form-control" id="branch_code" name="code" placeholder="e.g. CS, EC, General" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="branch_name" class="form-label fw-medium small text-muted mb-1">Branch Name</label>
+                        <input type="text" class="form-control" id="branch_name" name="name" placeholder="e.g. Computer Science" required>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-dark-blue text-white">Save Branch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

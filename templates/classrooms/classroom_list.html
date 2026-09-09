@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Examination Halls | College Exam Seating Arrangement System{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-dark-blue text-decoration-none">Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">Classrooms</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold text-dark-blue mb-0"><i class="bi bi-door-open-fill text-accent me-2"></i>Examination Halls</h4>
+        <button type="button" class="btn btn-dark-blue text-white" data-bs-toggle="modal" data-bs-target="#addRoomModal">
+            <i class="bi bi-plus-circle me-2"></i>Add Exam Hall
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Classrooms List -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-list-check text-primary me-2"></i>Available Seating Capacities</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if classrooms %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                        <thead class="table-light text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                            <tr>
+                                <th class="ps-3">Room Number</th>
+                                <th>Location (Building & Floor)</th>
+                                <th>Seat Grid Size</th>
+                                <th>Total Seats</th>
+                                <th>Availability</th>
+                                <th class="text-end pe-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room in classrooms %}
+                            <tr>
+                                <td class="ps-3 fw-bold text-dark-blue">{{ room.room_number }}</td>
+                                <td>{{ room.building }} ({{ room.floor }})</td>
+                                <td><span class="badge bg-secondary-subtle text-secondary-emphasis">{{ room.rows }} Rows × {{ room.columns }} Cols</span></td>
+                                <td><span class="fw-semibold text-primary fs-6">{{ room.capacity }} Seats</span></td>
+                                <td>
+                                    {% if room.is_available %}
+                                        <span class="badge bg-success-subtle text-success-emphasis"><i class="bi bi-check-circle me-1"></i>Available</span>
+                                    {% else %}
+                                        <span class="badge bg-danger-subtle text-danger-emphasis"><i class="bi bi-x-circle me-1"></i>Unavailable</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-3">
+                                    {% if room.is_available %}
+                                    <button type="button" class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#generateRoomSeatingModal_{{ room.id }}">
+                                        <i class="bi bi-grid-3x3-gap me-1"></i> Generate Seating
+                                    </button>
+                                    {% endif %}
+                                    <a href="{% url 'classroom_toggle' room.pk %}" class="btn btn-sm {% if room.is_available %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                                        {% if room.is_available %}
+                                            <i class="bi bi-toggle-on me-1"></i> Disable
+                                        {% else %}
+                                            <i class="bi bi-toggle-off me-1"></i> Enable
+                                        {% endif %}
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center py-4 text-muted">No classrooms registered yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Room Modal -->
+<div class="modal fade" id="addRoomModal" tabindex="-1" aria-labelledby="addRoomModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark-blue text-white">
+                <h5 class="modal-title fw-bold" id="addRoomModalLabel"><i class="bi bi-door-open me-2 text-accent"></i>Register New Exam Hall</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="room_number" class="form-label fw-medium small text-muted mb-1">Room Number / Name</label>
+                        <input type="text" class="form-control" id="room_number" name="room_number" placeholder="e.g. LHC-101, Lab-A" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="building" class="form-label fw-medium small text-muted mb-1">Building</label>
+                        <input type="text" class="form-control" id="building" name="building" placeholder="e.g. Main Academic Block" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="floor" class="form-label fw-medium small text-muted mb-1">Floor</label>
+                        <input type="text" class="form-control" id="floor" name="floor" placeholder="e.g. Ground Floor, 1st Floor" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label for="rows" class="form-label fw-medium small text-muted mb-1">Rows</label>
+                            <input type="number" class="form-control" id="rows" name="rows" min="1" max="25" placeholder="e.g. 6" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label for="columns" class="form-label fw-medium small text-muted mb-1">Columns</label>
+                            <input type="number" class="form-control" id="columns" name="columns" min="1" max="25" placeholder="e.g. 5" required>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" role="switch" id="is_available" name="is_available" checked>
+                        <label class="form-check-label text-muted small fw-medium" for="is_available">Mark Available for Seating</label>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-dark-blue text-white">Save Classroom</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% for room in classrooms %}
+{% if room.is_available %}
+<!-- Generate Seating Modal for {{ room.room_number }} -->
+<div class="modal fade" id="generateRoomSeatingModal_{{ room.id }}" tabindex="-1" aria-labelledby="generateRoomSeatingModalLabel_{{ room.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark-blue text-white">
+                <h5 class="modal-title fw-bold" id="generateRoomSeatingModalLabel_{{ room.id }}"><i class="bi bi-grid-3x3-gap me-2 text-accent"></i>Generate Seating: Room {{ room.room_number }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'generate_seating' %}">
+                {% csrf_token %}
+                <!-- Pre-select this classroom -->
+                <input type="hidden" name="classrooms" value="{{ room.id }}">
+                
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium small text-muted mb-1">Selected Classroom</label>
+                        <input type="text" class="form-control" value="{{ room.room_number }} - {{ room.building }} ({{ room.floor }})" disabled readonly>
+                    </div>
+                    
+                    <!-- Option to enter classroom capacity (Rows & Columns) -->
+                    <div class="row g-2 mb-3">
+                       <div class="col-6">
+                           <label for="rows_{{ room.id }}" class="form-label fw-medium small text-muted mb-1">Grid Rows (Capacity)</label>
+                           <input type="number" class="form-control" id="rows_{{ room.id }}" name="rows_{{ room.id }}" value="{{ room.rows }}" min="1" max="25" required>
+                       </div>
+                       <div class="col-6">
+                           <label for="cols_{{ room.id }}" class="form-label fw-medium small text-muted mb-1">Grid Columns (Capacity)</label>
+                           <input type="number" class="form-control" id="cols_{{ room.id }}" name="cols_{{ room.id }}" value="{{ room.columns }}" min="1" max="25" required>
+                       </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="exam_{{ room.id }}" class="form-label fw-medium small text-muted mb-1">Select Examination Session</label>
+                        <select class="form-select" id="exam_{{ room.id }}" name="exam" required>
+                            <option value="" disabled selected>Select Session</option>
+                            {% for exam in exams %}
+                            <option value="{{ exam.id }}">{{ exam.name }} ({{ exam.code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="exam_date_{{ room.id }}" class="form-label fw-medium small text-muted mb-1">Examination Date</label>
+                        <input type="date" class="form-control" id="exam_date_{{ room.id }}" name="exam_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="session_{{ room.id }}" class="form-label fw-medium small text-muted mb-1">Session</label>
+                        <select class="form-select" id="session_{{ room.id }}" name="session" required>
+                            <option value="Morning">Morning (09:30 AM - 12:30 PM)</option>
+                            <option value="Afternoon">Afternoon (02:00 PM - 05:00 PM)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="strategy_{{ room.id }}" class="form-label fw-medium small text-muted mb-1">Seating Strategy</label>
+                        <select class="form-select" id="strategy_{{ room.id }}" name="strategy" required>
+                            <option value="interleave_branch">Interleave Branches (e.g. BCA vs MCA)</option>
+                            <option value="interleave_sem">Interleave Semesters (e.g. Sem 1 vs Sem 2)</option>
+                            <option value="sequential">Sequential (By Subject & Roll Order)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-dark-blue text-white"><i class="bi bi-gear-fill me-2"></i>Generate Seating</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %}

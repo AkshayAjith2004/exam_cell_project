@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}Departments & Academic Years | College Exam Seating Arrangement System{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-dark-blue text-decoration-none">Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">Departments</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex flex-wrap gap-2 justify-content-between align-items-center">
+        <h4 class="fw-bold text-dark-blue mb-0"><i class="bi bi-diagram-3-fill text-accent me-2"></i>Departments & Academic Years</h4>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-dark-blue text-white" data-bs-toggle="modal" data-bs-target="#addDeptModal">
+                <i class="bi bi-plus-circle me-2"></i>Add Department
+            </button>
+            <button type="button" class="btn btn-outline-dark-blue" data-bs-toggle="modal" data-bs-target="#addAYModal">
+                <i class="bi bi-plus-circle me-2"></i>Add Academic Year
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Departments List -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-building text-primary me-2"></i>Academic Departments</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if departments %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                        <thead class="table-light text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                            <tr>
+                                <th class="ps-3">Code</th>
+                                <th>Department Name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dept in departments %}
+                            <tr>
+                                <td class="ps-3"><span class="badge bg-dark-blue text-white">{{ dept.code }}</span></td>
+                                <td class="fw-semibold text-dark-blue">{{ dept.name }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center py-4 text-muted">No departments created yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Academic Years List -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-dark-blue"><i class="bi bi-calendar-check text-primary me-2"></i>Academic Calendar Years</h5>
+                <button type="button" class="btn btn-sm btn-outline-dark-blue" data-bs-toggle="modal" data-bs-target="#addAYModal">
+                    <i class="bi bi-plus-circle me-1"></i>Add
+                </button>
+            </div>
+            <div class="card-body p-0">
+                {% if academic_years %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                        <thead class="table-light text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                            <tr>
+                                <th class="ps-3">Year / Session</th>
+                                <th>Status</th>
+                                <th class="text-end pe-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ay in academic_years %}
+                            <tr class="{% if ay.is_active %}table-success bg-opacity-10{% endif %}">
+                                <td class="ps-3 fw-semibold text-dark-blue">{{ ay.name }}</td>
+                                <td>
+                                    {% if ay.is_active %}
+                                        <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle"><i class="bi bi-check-circle me-1"></i>Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary-emphasis">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-3">
+                                    {% if ay.is_active %}
+                                    <form method="POST" action="{% url 'academic_year_toggle' pk=ay.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="status_action" value="deactivate">
+                                        <input type="hidden" name="next" value="{% url 'department_list' %}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0.5 px-2" title="Deactivate session">
+                                            <i class="bi bi-pause-circle me-1"></i>Deactivate
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <form method="POST" action="{% url 'academic_year_toggle' pk=ay.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="status_action" value="activate">
+                                        <input type="hidden" name="next" value="{% url 'department_list' %}">
+                                        <button type="submit" class="btn btn-sm btn-success text-white py-0.5 px-2" title="Activate session">
+                                            <i class="bi bi-check-circle me-1"></i>Activate
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center py-4 text-muted">No academic calendar years configured.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Department Modal -->
+<div class="modal fade" id="addDeptModal" tabindex="-1" aria-labelledby="addDeptModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark-blue text-white">
+                <h5 class="modal-title fw-bold" id="addDeptModalLabel"><i class="bi bi-building me-2 text-accent"></i>Add New Department</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_department">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="code" class="form-label fw-medium small text-muted mb-1">Department Code</label>
+                        <input type="text" class="form-control" id="code" name="code" placeholder="e.g. BCA, MCA, BTECH" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-medium small text-muted mb-1">Department Full Name</label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="e.g. Bachelor of Computer Applications" required>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-dark-blue text-white">Save Department</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Academic Year Modal -->
+<div class="modal fade" id="addAYModal" tabindex="-1" aria-labelledby="addAYModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark-blue text-white">
+                <h5 class="modal-title fw-bold" id="addAYModalLabel"><i class="bi bi-calendar-plus me-2 text-accent"></i>Add Academic Session</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_academic_year">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="ay_name" class="form-label fw-medium small text-muted mb-1">Academic Year Label</label>
+                        <input type="text" class="form-control" id="ay_name" name="name" placeholder="e.g. 2025-2026" required>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" role="switch" id="is_active" name="is_active" checked>
+                        <label class="form-check-label text-muted small fw-medium" for="is_active">Mark Active Session</label>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-dark-blue text-white">Save Session</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

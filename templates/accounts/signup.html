@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign Up | College Exam Seating Arrangement System{% endblock %}
+
+{% block public_content %}
+<div class="d-flex align-items-center justify-content-center min-vh-100 bg-light-blue-subtle py-5 position-relative">
+    <!-- Back to Home Button -->
+    <a href="{% url 'home' %}" class="btn btn-sm btn-outline-dark-blue position-absolute top-0 start-0 m-4 d-flex align-items-center gap-2 shadow-sm bg-white" style="z-index: 10;">
+        <i class="bi bi-house-door-fill"></i>
+        <span>Back to Home</span>
+    </a>
+    <div class="card border-0 shadow-lg overflow-hidden" style="max-width: 900px; width: 100%; border-radius: 16px;">
+        <div class="row g-0">
+            <!-- Left Banner (Desktop) -->
+            <div class="col-lg-5 bg-dark-blue text-white p-5 d-none d-lg-flex flex-column justify-content-center border-end">
+                <div class="mb-4">
+                    <img src="{% static 'core_app/images/logo.png' %}" alt="Logo" class="img-fluid rounded-circle bg-white p-2" style="width: 80px; height: 80px;">
+                </div>
+                <h3 class="fw-bold mb-2">Join CE Poonjar Portal</h3>
+                <p class="text-white-50" style="font-size: 14px;">Register your credentials as a Student, Teacher, or Exam Controller to participate in examination seating arrangements.</p>
+                <div class="mt-4 border-top pt-3 border-white-50">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-shield-check text-accent"></i>
+                        <small>Auto-allocates seating charts</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-card-checklist text-accent"></i>
+                        <small>Instantly check seating room tickets</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Signup Form -->
+            <div class="col-lg-7 bg-white p-4 p-md-5">
+                <div class="mobile-branding text-center d-lg-none mb-4">
+                    <img src="{% static 'core_app/images/logo.png' %}" alt="Logo" class="img-fluid rounded-circle bg-white shadow-sm p-1" style="width: 60px; height: 60px;">
+                    <h5 class="fw-bold mt-2 text-dark-blue mb-0">College of Engineering Poonjar</h5>
+                    <small class="text-muted" style="font-size: 11px;">Examination Registration</small>
+                </div>
+
+                <h3 class="fw-bold text-dark-blue mb-2">Create Account</h3>
+                <p class="text-muted small mb-4">Sign up to get access to examination dashboards.</p>
+
+                <!-- Message Alerts -->
+                {% if messages %}
+                <div class="messages-container mb-3">
+                    {% for message in messages %}
+                    <div class="alert alert-danger border-0 shadow-sm py-2" role="alert" style="font-size: 13px;">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{% url 'signup' %}" id="signupForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <!-- Role -->
+                        <div class="col-12">
+                            <label for="role" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">I want to sign up as a:</label>
+                            <select class="form-select border-primary" id="role" name="role" required>
+                                <option value="STUDENT" selected>Student</option>
+                                <option value="TEACHER">Teacher / Faculty</option>
+                                <option value="EXAM_CONTROLLER">Exam Controller</option>
+                            </select>
+                        </div>
+
+                        <!-- Username -->
+                        <div class="col-md-6">
+                            <label for="username" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Username / Login ID</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="e.g. amit_patel" required>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="col-md-6">
+                            <label for="password" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+                        </div>
+
+                        <!-- First Name -->
+                        <div class="col-md-6">
+                            <label for="first_name" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+
+                        <!-- Last Name -->
+                        <div class="col-md-6">
+                            <label for="last_name" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="col-12">
+                            <label for="email" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="name@college.edu" required>
+                        </div>
+
+                        <div class="col-12 photo-fields d-none">
+                            <label for="photo" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Profile Photo</label>
+                            <input type="file" class="form-control" id="photo" name="photo" accept="image/*" required>
+                        </div>
+
+                        <!-- Dynamic Student Fields -->
+                        <div class="student-fields row g-3 m-0 p-0 col-12">
+                            <div class="col-md-6 ps-0">
+                                <label for="admission_number" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Admission Number</label>
+                                <input type="text" class="form-control student-input" id="admission_number" name="admission_number" placeholder="e.g. 23BCA101" required>
+                            </div>
+                            <div class="col-md-6 pe-0">
+                                <label for="registration_number" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">University Reg No (Optional)</label>
+                                <input type="text" class="form-control" id="registration_number" name="registration_number" placeholder="Reg No">
+                            </div>
+                            <div class="col-md-6 ps-0">
+                                <label for="branch" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Branch / Course</label>
+                                <select class="form-select student-input" id="branch" name="branch" required>
+                                    <option value="" disabled selected>Select Branch</option>
+                                    {% for branch in branches %}
+                                    <option value="{{ branch.id }}">{{ branch.department.code }} - {{ branch.code }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 pe-0">
+                                <label for="semester" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Semester</label>
+                                <select class="form-select student-input" id="semester" name="semester" required>
+                                    <option value="" disabled selected>Select Semester</option>
+                                    {% for sem in semester_choices %}
+                                    <option value="{{ sem }}">Semester {{ sem }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-12 px-0">
+                                <label for="student_phone" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Phone Number</label>
+                                <input type="text" class="form-control student-input" id="student_phone" name="phone" placeholder="e.g. 9876543210" required>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Teacher Fields -->
+                        <div class="teacher-fields row g-3 m-0 p-0 col-12 d-none">
+                            <div class="col-md-6 ps-0">
+                                <label for="employee_id" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Employee ID</label>
+                                <input type="text" class="form-control teacher-input" id="employee_id" name="employee_id" placeholder="e.g. EMP101">
+                            </div>
+                            <div class="col-md-6 pe-0">
+                                <label for="department" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Department</label>
+                                <select class="form-select teacher-input" id="department" name="department">
+                                    <option value="" disabled selected>Select Department</option>
+                                    {% for dept in departments %}
+                                    <option value="{{ dept.id }}">{{ dept.name }} ({{ dept.code }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-12 px-0">
+                                <label for="teacher_phone" class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Phone Number</label>
+                                <input type="text" class="form-control teacher-input" id="teacher_phone" name="phone" placeholder="e.g. 9911223344">
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-4">
+                            <button type="submit" class="btn btn-dark-blue w-100 py-2.5 fw-semibold text-white">
+                                <i class="bi bi-person-plus-fill me-2"></i>Register Account
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="mt-4 pt-3 border-top text-center text-muted">
+                    <p class="small mb-0">Already have an account? <a href="{% url 'login' %}" class="fw-semibold text-dark-blue">Sign In</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const roleSelect = document.getElementById('role');
+    const studentFields = document.querySelector('.student-fields');
+    const teacherFields = document.querySelector('.teacher-fields');
+    const photoFields = document.querySelector('.photo-fields');
+    
+    const studentInputs = document.querySelectorAll('.student-input');
+    const teacherInputs = document.querySelectorAll('.teacher-input');
+
+    function toggleFields() {
+        const role = roleSelect.value;
+        if (role === 'STUDENT') {
+            studentFields.classList.remove('d-none');
+            teacherFields.classList.add('d-none');
+            photoFields.classList.remove('d-none');
+            
+            // Toggle required attributes
+            studentInputs.forEach(i => i.setAttribute('required', ''));
+            teacherInputs.forEach(i => i.removeAttribute('required'));
+            document.getElementById('photo').setAttribute('required', '');
+        } else if (role === 'TEACHER') {
+            studentFields.classList.add('d-none');
+            teacherFields.classList.remove('d-none');
+            photoFields.classList.remove('d-none');
+            
+            // Toggle required attributes
+            studentInputs.forEach(i => i.removeAttribute('required'));
+            teacherInputs.forEach(i => i.setAttribute('required', ''));
+            document.getElementById('photo').setAttribute('required', '');
+        } else {
+            // Exam controller needs no special fields
+            studentFields.classList.add('d-none');
+            teacherFields.classList.add('d-none');
+            photoFields.classList.remove('d-none');
+            
+            studentInputs.forEach(i => i.removeAttribute('required'));
+            teacherInputs.forEach(i => i.removeAttribute('required'));
+            document.getElementById('photo').setAttribute('required', '');
+        }
+    }
+
+    roleSelect.addEventListener('change', toggleFields);
+    toggleFields(); // Initial run
+</script>
+{% endblock %}

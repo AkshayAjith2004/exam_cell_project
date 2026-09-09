@@ -1,0 +1,250 @@
+{% load static %}
+
+<!-- Top Header Branding -->
+<header class="bg-white py-3 border-bottom shadow-sm">
+    <div class="container d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3">
+            <img src="{% static 'core_app/images/logo.png' %}" alt="CE Poonjar Logo" class="header-logo" style="width: 75px; height: auto;">
+            <div>
+                <h2 class="fw-bold text-dark-blue mb-0 fs-2">COLLEGE OF ENGINEERING POONJAR</h2>
+                <small class="text-muted text-uppercase tracking-wider" style="font-size: 13.5px; font-weight: 600;">Managed by I.H.R.D., A Govt. of Kerala Undertaking</small>
+            </div>
+        </div>
+        {% if user.is_authenticated %}
+        <a href="{% url 'dashboard' %}" class="btn btn-dark-blue px-4 py-2.5 fw-semibold fs-6">
+            <i class="bi bi-grid-1x2 me-2"></i>Dashboard
+        </a>
+        {% else %}
+        <a href="{% url 'login' %}" class="btn btn-dark-blue px-4 py-2.5 fw-semibold fs-6">
+            <i class="bi bi-shield-lock me-2"></i>Portal Login
+        </a>
+        {% endif %}
+    </div>
+</header>
+
+<!-- Header Divider Line with Gold Accents -->
+<div class="divider-bar bg-accent" style="height: 5px;"></div>
+
+<!-- Main Body Campus Image Hero Showcase (Carousel Slider) -->
+<section class="campus-hero-section py-4 bg-light">
+    <div class="container text-center">
+        <div class="campus-image-card shadow border rounded overflow-hidden bg-white p-2 mx-auto" style="max-width: 900px;">
+            <div id="campusCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="4000">
+                <!-- Indicators -->
+                <div class="carousel-indicators mb-2">
+                    <button type="button" data-bs-target="#campusCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                    <button type="button" data-bs-target="#campusCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                    <button type="button" data-bs-target="#campusCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                    <button type="button" data-bs-target="#campusCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
+                </div>
+                
+                <!-- Slides -->
+                <div class="carousel-inner rounded">
+                    <div class="carousel-item active">
+                        <img src="{% static 'core_app/images/slider1.jpg' %}" alt="College of Engineering Poonjar Campus Aerial View" class="d-block w-100 rounded" style="object-fit: cover; height: 440px;">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="{% static 'core_app/images/slider2.jpg' %}" alt="College of Engineering Poonjar Main Block Lawn" class="d-block w-100 rounded" style="object-fit: cover; height: 440px;">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="{% static 'core_app/images/slider3.jpg' %}" alt="College of Engineering Poonjar Main Entrance & Courtyard" class="d-block w-100 rounded" style="object-fit: cover; height: 440px;">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="{% static 'core_app/images/slider4.jpg' %}" alt="College of Engineering Poonjar Main Building & Banner" class="d-block w-100 rounded" style="object-fit: cover; height: 440px;">
+                    </div>
+                </div>
+                
+                <!-- Controls -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#campusCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#campusCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+            <div class="py-2 text-muted border-top mt-2 fs-6 fw-medium">
+                <i class="bi bi-building me-1 text-primary"></i> Campus Gallery & Facilities, College of Engineering Poonjar
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Hero Banner / Welcome Text -->
+<section class="welcome-section text-center py-5 bg-white border-bottom">
+    <div class="container" style="max-width: 850px;">
+        <h1 class="display-5 fw-bold text-dark-blue mb-3">College Exam Seating Arrangement System</h1>
+        <p class="lead text-muted fs-5" style="line-height: 1.75;">Welcome to the official exam seating portal. This full-stack automated platform streamlines hall scheduling, interleaves seat generation to prevent collusion, and prints desk slips and layouts instantly.</p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a href="#institution" class="btn btn-outline-dark-blue px-4 py-2.5 fs-6 fw-semibold">Our Institution</a>
+            <a href="#about" class="btn btn-outline-dark-blue px-4 py-2.5 fs-6 fw-semibold">About System</a>
+            <a href="#features" class="btn btn-outline-dark-blue px-4 py-2.5 fs-6 fw-semibold">System Features</a>
+        </div>
+    </div>
+</section>
+
+<!-- Main Sections -->
+<div class="container my-5">
+    <div class="row g-4">
+        <!-- Left Column: About & Features -->
+        <div class="col-lg-8">
+            <!-- Our Institution -->
+            <div class="card border-0 shadow-sm p-4 mb-4" id="institution">
+                <h3 class="fw-bold text-dark-blue border-bottom pb-2 mb-3"><i class="bi bi-building me-2 text-accent"></i>Our Institution</h3>
+                <p class="text-muted mb-4" style="text-align: justify; line-height: 1.75; font-size: 15.5px;">
+                    College of Engineering Poonjar was established in 2000 by the Institute of Human Resources Development (IHRD), an autonomous educational institution under the Government of Kerala. The management of IHRD is vested with a Governing Body composed of the Hon'ble Minister of Education, Kerala State, as the Chairman and Additional Chief Secretary, Higher Education Department, Government of Kerala as the Vice-Chairman. IHRD is based on the principle, "Think Globally and Act Locally" and its associate institutions are located in diverse locations in Kerala to achieve this goal. College of Engineering Poonjar is located in a scenic place on a calm hilly region with pure air and greenery congenial for any student to pursue learning with dedication.
+                </p>
+
+                <!-- Vision & Mission -->
+                <div class="row g-3 mt-2 mb-4">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded border-start border-4 border-accent h-100">
+                            <h4 class="fw-bold text-dark-blue mb-2"><i class="bi bi-eye me-2 text-accent"></i>Vision</h4>
+                            <p class="text-muted mb-0" style="text-align: justify; line-height: 1.65; font-size: 14.5px;">
+                                Scientific advancement, Technological progress and Economic growth of the Country through human resources development adhering to the principle "Think Globally, and Act Locally".
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded border-start border-4 border-accent h-100">
+                            <h4 class="fw-bold text-dark-blue mb-2"><i class="bi bi-bullseye me-2 text-accent"></i>Mission</h4>
+                            <ul class="text-muted mb-0 ps-3" style="text-align: justify; line-height: 1.65; font-size: 14.5px;">
+                                <li class="mb-1">To provide education and training of consistently high standards through innovative and versatile programmes that are beneficial to current and emerging needs of society.</li>
+                                <li class="mb-1">To ensure that the aim of education is realized not only in acquiring new knowledge and skills, but also in attaining wisdom and judgement indispensable to proper application.</li>
+                                <li>To provide support in ensuring lifelong learning which promotes total development of the individual and society.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campus, Academic Excellence, Infrastructure -->
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded h-100">
+                            <h5 class="fw-bold text-dark-blue mb-2"><i class="bi bi-tree me-2 text-success"></i>Campus Environment</h5>
+                            <p class="text-muted mb-0" style="text-align: justify; line-height: 1.6; font-size: 14px;">
+                                Located in a scenic, calm hilly region with pure air and greenery, creating an atmosphere that encourages focus, reflection, and holistic personal development.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded h-100">
+                            <h5 class="fw-bold text-dark-blue mb-2"><i class="bi bi-award me-2 text-primary"></i>Academic Excellence</h5>
+                            <p class="text-muted mb-0" style="text-align: justify; line-height: 1.6; font-size: 14px;">
+                                Delivers education of consistently high standards through innovative programmes under IHRD, preparing graduates with knowledge, skills, and strong values.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded h-100">
+                            <h5 class="fw-bold text-dark-blue mb-2"><i class="bi bi-tools me-2 text-warning"></i>Infrastructure</h5>
+                            <p class="text-muted mb-0" style="text-align: justify; line-height: 1.6; font-size: 14px;">
+                                Equips students with modern laboratories, high-tech examination halls, and spacious learning environments that support technical expertise.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- About -->
+            <div class="card border-0 shadow-sm p-4 mb-4" id="about">
+                <h3 class="fw-bold text-dark-blue border-bottom pb-2 mb-3"><i class="bi bi-info-circle me-2 text-accent"></i>About the System</h3>
+                <p style="font-size: 15.5px; line-height: 1.75;">The traditional method of arranging seats manually in educational institutions is time-consuming, prone to seat conflicts, and highly tedious. This portal solves those limitations by offering role-based automation:</p>
+                <ul style="font-size: 15px; line-height: 1.75;">
+                    <li class="mb-2"><strong>Intelligent Seating Generator:</strong> Uses round-robin interleaving to place students from different semesters/branches next to each other, preventing collusion.</li>
+                    <li class="mb-2"><strong>Print-Ready Documents:</strong> Download door plans, desk slips, notice board lists, and branch summaries in one click.</li>
+                    <li><strong>Subject & Hall Allocator:</strong> Manage room dimensions (rows and columns) and associate subjects and teachers instantly.</li>
+                </ul>
+            </div>
+
+            <!-- Features Grid -->
+            <div class="row g-3" id="features">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm p-4 h-100 border-start border-4 border-dark-blue">
+                        <h5 class="fw-bold text-dark-blue mb-2"><i class="bi bi-shield-check me-2 text-primary"></i>Secure Access</h5>
+                        <p class="text-muted mb-0" style="font-size: 14.5px; line-height: 1.55;">Separate logins for Students, Teachers, Controllers, and Admins with Django Auth protection.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm p-4 h-100 border-start border-4 border-dark-blue">
+                        <h5 class="fw-bold text-dark-blue mb-2"><i class="bi bi-gear-wide-connected me-2 text-primary"></i>Interleaved Seating</h5>
+                        <p class="text-muted mb-0" style="font-size: 14.5px; line-height: 1.55;">Weave BCA, MCA, and B.Tech students in rows and columns to maintain examination integrity.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm p-4 h-100 border-start border-4 border-dark-blue">
+                        <h5 class="fw-bold text-dark-blue mb-2"><i class="bi bi-printer me-2 text-primary"></i>Desk Slips & Reports</h5>
+                        <p class="text-muted mb-0" style="font-size: 14.5px; line-height: 1.55;">Generate and print classroom desk labels, signature sheets, and room door layouts.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm p-4 h-100 border-start border-4 border-dark-blue">
+                        <h5 class="fw-bold text-dark-blue mb-2"><i class="bi bi-sliders me-2 text-primary"></i>Manual Adjustments</h5>
+                        <p class="text-muted mb-0" style="font-size: 14.5px; line-height: 1.55;">Allows controllers to manually swap students or clear seats after automatic allocation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Portal Login & Notices -->
+        <div class="col-lg-4">
+            {% if not user.is_authenticated %}
+            <!-- Access Portal Link Card -->
+            <div class="card bg-dark-blue text-white border-0 shadow-sm p-4 mb-4" id="login-portal">
+                <h4 class="fw-bold mb-3 text-accent"><i class="bi bi-shield-lock-fill me-2"></i>Access Portal</h4>
+                <p class="text-white-50 mb-3" style="font-size: 14.5px; line-height: 1.6;">Select your user role and log in to access your customized academic dashboard panel.</p>
+                <div class="d-flex flex-column gap-2 mt-3">
+                    <a href="{% url 'login' %}" class="btn btn-accent text-dark-blue fw-bold py-2.5 fs-6 shadow-sm">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In to Dashboard
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Latest Announcements -->
+            <div class="card border-0 shadow-sm p-4">
+                <h4 class="fw-bold text-dark-blue border-bottom pb-2 mb-3"><i class="bi bi-megaphone me-2 text-accent"></i>Notice Board</h4>
+                {% if announcements %}
+                    <div class="announcements-list">
+                        {% for notice in announcements %}
+                        <div class="notice-item border-bottom pb-2 mb-3">
+                            <h6 class="fw-bold mb-1 text-dark-blue" style="font-size: 15px;">{{ notice.title }}</h6>
+                            <p class="text-muted mb-1" style="font-size: 13.5px; line-height: 1.5;">{{ notice.message|truncatewords:15 }}</p>
+                            <small class="text-muted" style="font-size: 11.5px;"><i class="bi bi-clock me-1"></i>{{ notice.created_at|date:"d-M-Y" }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted small">
+                        <i class="bi bi-megaphone-fill fa-2x mb-2 text-white-50"></i>
+                        <p class="mb-0 fs-6">No active announcements posted.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if not user.is_authenticated %}
+<!-- Contact Section -->
+<section class="contact-section py-5 bg-white border-top">
+    <div class="container text-center">
+        <h3 class="fw-bold text-dark-blue mb-4">Contact Examination Center</h3>
+        <div class="row g-3 justify-content-center" style="font-size: 15.5px; line-height: 1.65;">
+            <div class="col-md-4">
+                <i class="bi bi-geo-alt fs-3 text-accent"></i>
+                <p class="mt-2 mb-0">College of Engineering Poonjar<br>Poonjar Thekkekara P.O., Kottayam, Kerala - 686582</p>
+            </div>
+            <div class="col-md-3">
+                <i class="bi bi-envelope fs-3 text-accent"></i>
+                <p class="mt-2 mb-0">cepinfo@ihrd.ac.in<br>examcell@cep.ac.in</p>
+            </div>
+            <div class="col-md-3">
+                <i class="bi bi-telephone fs-3 text-accent"></i>
+                <p class="mt-2 mb-0">+91 482 2271015<br>Fax: +91 482 2271015</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
